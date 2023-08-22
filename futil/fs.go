@@ -2,6 +2,7 @@ package futil
 
 import (
 	"os"
+	"fs"
 )
 
 var (
