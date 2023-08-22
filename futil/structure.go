@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	MIN_DIGITS 	= 2
-	SEPARATOR 	= "_"
+	FS_MIN_DIGITS 	= 2
+	FS_SEPARATOR 	= "_"
 )
 
 //	Get structured file path from file ID
@@ -35,7 +35,7 @@ func FS_create_folder(file_id int, base_path string, min_digits int) string{
 
 //	Fetch files in structured file path by file ID
 func FS_fetch(file_id int, base_path string, min_digits int) []string{
-	files, err := filepath.Glob(FS_get(file_id, base_path, min_digits)+"/"+strconv.Itoa(file_id)+SEPARATOR+"*")
+	files, err := filepath.Glob(FS_get(file_id, base_path, min_digits)+"/"+strconv.Itoa(file_id)+FS_SEPARATOR+"*")
 	if err != nil {
 		panic("Could not fetch files: "+err.Error())
 	}
