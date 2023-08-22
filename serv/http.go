@@ -9,7 +9,7 @@ import (
 	"runtime/debug"
 	"path/filepath"
 	"net/http"
-	"dynaccount-license/cutil"
+	"github.com/clarkk/go-util/cutil"
 )
 
 type HTTP struct {
