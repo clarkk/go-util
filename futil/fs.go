@@ -2,7 +2,7 @@ package futil
 
 import (
 	"os"
-	"fs"
+	"io/fs"
 )
 
 var (
