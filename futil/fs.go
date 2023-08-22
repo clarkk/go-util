@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	CHMOD_WR_OWNER 	= 0640
+	CHMOD_WR_OWNER fs.FileMode 	= 0640
 )
 
 func Chmod_write_owner(path string){
