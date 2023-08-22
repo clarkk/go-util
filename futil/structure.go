@@ -10,32 +10,31 @@ import (
 
 const (
 	MIN_DIGITS 	= 2
-	DIR_PERM 	= 0640
 	SEPARATOR 	= "_"
 )
 
 //	Get structured file path from file ID
-func Get(file_id int, base_path string, min_digits int) string{
-	return compile(file_id, base_path, min_digits, false, false)
+func FS_get(file_id int, base_path string, min_digits int) string{
+	return fs_compile(file_id, base_path, min_digits, false, false)
 }
 
 //	Get structured file path from file ID with folder
-func Get_folder(file_id int, base_path string, min_digits int) string{
-	return compile(file_id, base_path, min_digits, false, true)
+func FS_get_folder(file_id int, base_path string, min_digits int) string{
+	return fs_compile(file_id, base_path, min_digits, false, true)
 }
 
 //	Create structured file path from file ID
-func Create(file_id int, base_path string, min_digits int) string{
-	return compile(file_id, base_path, min_digits, true, false)
+func FS_create(file_id int, base_path string, min_digits int) string{
+	return fs_compile(file_id, base_path, min_digits, true, false)
 }
 
 //	Create structured file path from file ID with folder
-func Create_folder(file_id int, base_path string, min_digits int) string{
-	return compile(file_id, base_path, min_digits, true, true)
+func FS_create_folder(file_id int, base_path string, min_digits int) string{
+	return fs_compile(file_id, base_path, min_digits, true, true)
 }
 
 //	Fetch files in structured file path by file ID
-func Fetch(file_id int, base_path string, min_digits int) []string{
+func FS_fetch(file_id int, base_path string, min_digits int) []string{
 	files, err := filepath.Glob(Get(file_id, base_path, min_digits)+"/"+strconv.Itoa(file_id)+SEPARATOR+"*")
 	if err != nil {
 		panic("Could not fetch files: "+err.Error())
@@ -44,7 +43,7 @@ func Fetch(file_id int, base_path string, min_digits int) []string{
 }
 
 //	Fetch files in structured file path by file ID with folder
-func Fetch_folder(file_id int, base_path string, min_digits int) []string{
+func FS_fetch_folder(file_id int, base_path string, min_digits int) []string{
 	files, err := filepath.Glob(Get_folder(file_id, base_path, min_digits)+"/*")
 	if err != nil {
 		panic("Could not fetch files: "+err.Error())
@@ -53,7 +52,7 @@ func Fetch_folder(file_id int, base_path string, min_digits int) []string{
 }
 
 //	Delete files
-func Delete(files []string){
+func Delete_files(files []string){
 	for _, file := range files {
 		err := os.Remove(file)
 		if err != nil {
@@ -99,7 +98,7 @@ func Delete(files []string){
 }*/
 
 //	Compile structured file path from file ID
-func compile(file_id int, path string, min_digits int, create bool, folder bool) string{
+func fs_compile(file_id int, path string, min_digits int, create bool, folder bool) string{
 	id 		:= strconv.Itoa(file_id)
 	path 	= strings.TrimRight(path, "/")
 	length	:= len(id)
@@ -124,7 +123,7 @@ func compile(file_id int, path string, min_digits int, create bool, folder bool)
 	}
 	
 	if create {
-		err := os.MkdirAll(path, DIR_PERM)
+		err := os.MkdirAll(path, CHMOD_WR_OWNER)
 		if err != nil {
 			panic("Could not create path: "+path+" "+err.Error())
 		}
