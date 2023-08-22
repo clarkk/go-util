@@ -35,7 +35,7 @@ func FS_create_folder(file_id int, base_path string, min_digits int) string{
 
 //	Fetch files in structured file path by file ID
 func FS_fetch(file_id int, base_path string, min_digits int) []string{
-	files, err := filepath.Glob(Get(file_id, base_path, min_digits)+"/"+strconv.Itoa(file_id)+SEPARATOR+"*")
+	files, err := filepath.Glob(FS_get(file_id, base_path, min_digits)+"/"+strconv.Itoa(file_id)+SEPARATOR+"*")
 	if err != nil {
 		panic("Could not fetch files: "+err.Error())
 	}
@@ -44,7 +44,7 @@ func FS_fetch(file_id int, base_path string, min_digits int) []string{
 
 //	Fetch files in structured file path by file ID with folder
 func FS_fetch_folder(file_id int, base_path string, min_digits int) []string{
-	files, err := filepath.Glob(Get_folder(file_id, base_path, min_digits)+"/*")
+	files, err := filepath.Glob(FS_get_folder(file_id, base_path, min_digits)+"/*")
 	if err != nil {
 		panic("Could not fetch files: "+err.Error())
 	}
