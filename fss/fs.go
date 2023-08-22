@@ -1,4 +1,4 @@
-package hfs
+package fss
 
 import (
 	"strings"
