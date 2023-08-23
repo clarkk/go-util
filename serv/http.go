@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"regexp"
+	"context"
 	"runtime"
 	"runtime/debug"
 	"path/filepath"
@@ -12,30 +14,53 @@ import (
 	"github.com/clarkk/go-util/cutil"
 )
 
-type HTTP struct {
-	host 		string
-	port 		int
+const (
+	ALL 	= "*"
+	GET 	= "GET"
+	POST 	= "POST"
+	PUT 	= "PUT"
+	DEL 	= "DELETE"
+)
+
+type (
+	HTTP struct {
+		host 		string
+		port 		int
+		
+		tld 		string
+		test 		bool
+		
+		routes 		[]*route
+	}
 	
-	tld 		string
-	test 		bool
+	route struct {
+		method 		string
+		regex 		*regexp.Regexp
+		handler		http.HandlerFunc
+	}
 	
-	routes 		map[string]func(w http.ResponseWriter, r *http.Request)
-}
+	ctx_key struct{}
+)
 
 func NewHTTP(host string, port int) *HTTP {
 	return &HTTP{
 		host:	host,
 		port:	port,
 		tld:	get_tld(),
-		routes:	map[string]func(w http.ResponseWriter, r *http.Request){},
+		routes:	[]*route{},
 	}
 }
 
-func Panic_recover(w http.ResponseWriter){
+func Recover(w http.ResponseWriter){
 	if r := recover(); r != nil {
 		http.Error(w, "Unexpected error", http.StatusBadRequest)
 		log.Fatal(r, string(debug.Stack()))
 	}
+}
+
+func Get_field(r *http.Request, index int) string {
+	fields := r.Context().Value(ctx_key{}).([]string)
+	return fields[index]
 }
 
 func (h *HTTP) Test(){
@@ -43,24 +68,18 @@ func (h *HTTP) Test(){
 	h.test = true
 }
 
-func (h *HTTP) Route(base_url string, handler func(http.ResponseWriter, *http.Request)){
-	h.routes[base_url] = handler
+func (h *HTTP) Route(method string, pattern string, handler http.HandlerFunc){
+	h.routes = append(h.routes, &route{
+		method,
+		regexp.MustCompile("^"+pattern),
+		handler,
+	})
 }
 
 func (h *HTTP) Run(){
 	cutil.Out(fmt.Sprintf("Listening on: %s:%d, %s (pid: %d, GOMAXPROCS: %d) running as '%s'", h.host, h.port, h.tld, os.Getpid(), runtime.GOMAXPROCS(0), cutil.Get_user().Username))
 	
-	mux := http.NewServeMux()
-	for base_url, handler := range h.routes {
-		mux.HandleFunc(base_url, handler)
-	}
-	
-	server := &http.Server{
-		Addr:		fmt.Sprintf("%s:%d", h.host, h.port),
-		Handler:	mux,
-	}
-	
-	err := server.ListenAndServe()
+	err := http.ListenAndServe(fmt.Sprintf("%s:%d", h.host, h.port), http.HandlerFunc(h.serve))
 	if err != nil {
 		pid, name := h.used_port_pid()
 		if pid != "" {
@@ -69,6 +88,31 @@ func (h *HTTP) Run(){
 		
 		log.Fatal("HTTP server: "+err.Error())
 	}
+}
+
+func (h *HTTP) serve(w http.ResponseWriter, r *http.Request) {
+	var allow []string
+	for _, route := range h.routes {
+		matches := route.regex.FindStringSubmatch(r.URL.Path)
+		if len(matches) > 0 {
+			if route.method != ALL && r.Method != route.method {
+				allow = append(allow, route.method)
+				continue
+			}
+			
+			ctx := context.WithValue(r.Context(), ctx_key{}, matches[1:])
+			route.handler(w, r.WithContext(ctx))
+			return
+		}
+	}
+	
+	if len(allow) > 0 {
+		w.Header().Set("Allow", strings.Join(allow, ", "))
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	
+	http.Error(w, "Not found", http.StatusNotFound)
 }
 
 func (h *HTTP) used_port_pid() (string, string){
