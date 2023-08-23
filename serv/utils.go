@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func Get_remote_IP(r *http.Request) string{
+func Get_client_IP(r *http.Request) string{
 	ip := r.Header.Get("X-Real-Ip")
 	if ip == "" {
 		ip = r.Header.Get("X-Forwarded-For")
