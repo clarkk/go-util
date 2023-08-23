@@ -39,7 +39,7 @@ type (
 		handler		http.HandlerFunc
 	}
 	
-	ctx_key struct{}
+	ctx_slugs struct {}
 )
 
 func NewHTTP(host string, port int) *HTTP {
@@ -58,8 +58,8 @@ func Recover(w http.ResponseWriter){
 	}
 }
 
-func Get_field(r *http.Request, index int) string {
-	fields := r.Context().Value(ctx_key{}).([]string)
+func Get_slug(r *http.Request, index int) string {
+	fields := r.Context().Value(ctx_slugs{}).([]string)
 	return fields[index]
 }
 
@@ -100,7 +100,7 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			
-			ctx := context.WithValue(r.Context(), ctx_key{}, matches[1:])
+			ctx := context.WithValue(r.Context(), ctx_slugs{}, matches[1:])
 			route.handler(w, r.WithContext(ctx))
 			return
 		}
