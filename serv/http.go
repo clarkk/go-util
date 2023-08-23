@@ -58,7 +58,7 @@ func Recover(w http.ResponseWriter){
 	}
 }
 
-func Get_slug(r *http.Request, index int) string {
+func Get_pattern_slug(r *http.Request, index int) string {
 	fields := r.Context().Value(ctx_slugs{}).([]string)
 	return fields[index]
 }
