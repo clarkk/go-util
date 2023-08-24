@@ -15,11 +15,11 @@ import (
 )
 
 const (
-	All 	= "*"
-	Get 	= "GET"
-	Post 	= "POST"
-	Put 	= "PUT"
-	Del 	= "DELETE"
+	ALL 	= "*"
+	GET 	= "GET"
+	POST 	= "POST"
+	PUT 	= "PUT"
+	DEL 	= "DELETE"
 )
 
 type (
