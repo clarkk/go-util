@@ -1,5 +1,7 @@
 # go-util/serv
-Leightweight HTTP server with regex patterns as routes
+Leightweight HTTP server
+- With regex patterns in routes
+- Allowed specific HTTP requests to routes
 
 ```
 package main
@@ -54,7 +56,10 @@ func main(){
 ```
 
 # go-util/sess
-HTTP sessions with read-locks to prevent concurrent requests to read data from the same session
+HTTP sessions
+- With read-locks to prevent concurrent requests to read data from the same session
+- Handles all sessions local in Go to optimize I/O performance
+- Uses Redis as fallback if Go HTTP server is restarted
 
 ```
 //  Connect to Redis
