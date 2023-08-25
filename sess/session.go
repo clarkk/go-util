@@ -65,8 +65,6 @@ func Start(p *pool, w http.ResponseWriter, r *http.Request) *session {
 		}
 	}
 	
-	s.lock.Lock()
-	
 	ctx = context.WithValue(ctx, ctx_session, s)
 	r2 := r.WithContext(ctx)
 	*r = *r2
@@ -117,6 +115,7 @@ func fetch_session(ctx context.Context, p *pool, sid string) *session {
 		if time_unix() > local.expires {
 			return nil
 		}
+		local.lock.Lock()
 		return local
 	}
 	
@@ -141,6 +140,7 @@ func new(p *pool, sid string) *session {
 		expires:	expires(),
 		data:		session_data{},
 	}
+	s.lock.Lock()
 	p.Set(sid, s)
 	return s
 }
@@ -157,6 +157,7 @@ func update_remote_session(ctx context.Context, s *session){
 }
 
 func (s *session) reset(){
+	s.lock.Lock()
 	s.closed 	= false
 	s.expires 	= expires()
 }

@@ -56,10 +56,10 @@ func main(){
 ```
 
 # go-util/sess
-HTTP sessions
+Leightweight HTTP sessions
 - With read-locks to prevent concurrent requests to read data from the same session
 - Handles all sessions local in Go to optimize I/O performance
-- Uses Redis as fallback if Go HTTP server is restarted
+- Uses Redis as fallback if Go HTTP server is restarted to recover sessions
 
 ```
 //  Connect to Redis
