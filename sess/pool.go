@@ -45,13 +45,20 @@ func (p *pool) Get(sid string) (*session, bool){
 	return s, ok
 }
 
+func (p *pool) Delete(sid string){
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	
+	delete(p.sessions, sid)
+}
+
 func (p *pool) purge_expired(){
 	p.lock.Lock()
 	defer p.lock.Unlock()
 	
 	time_unix := time_unix()
-	for sid, session := range p.sessions {
-		if time_unix > session.expires {
+	for sid, s := range p.sessions {
+		if time_unix > s.expires {
 			delete(p.sessions, sid)
 		}
 	}

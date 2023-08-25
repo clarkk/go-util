@@ -52,7 +52,6 @@ func Start(p *pool, w http.ResponseWriter, r *http.Request) *session {
 		//	Create session cookie and start new session
 		sid 	= set_cookie(w)
 		s 		= new(p, sid)
-		s.lock.Lock()
 	}else{
 		sid 	= cookie.Value
 		s 		= fetch_session(ctx, p, sid)
@@ -60,10 +59,8 @@ func Start(p *pool, w http.ResponseWriter, r *http.Request) *session {
 			//	Create session cookie and start new session
 			sid 	= set_cookie(w)
 			s 		= new(p, sid)
-			s.lock.Lock()
 		}else{
 			//	Continue session
-			s.lock.Lock()
 			s.reset()
 		}
 	}
@@ -95,9 +92,7 @@ func (s *session) Write(data session_data){
 		panic("Can not write to closed session")
 	}
 	
-	for k, v := range data {
-		s.data[k] = v
-	}
+	s.data = data
 }
 
 //	Close session for further writes and release read lock
@@ -106,9 +101,24 @@ func (s *session) Close(){
 		s.closed = true;
 		s.lock.Unlock()
 		
-		//	Update remote session on Redis
+		//	Update remote session from Redis
 		go update_remote_session(context.Background(), s)
 	}
+}
+
+//	Destroy and delete session
+func (s *session) Destroy(p *pool){
+	if s.closed {
+		panic("Can not destroy closed session")
+	}
+	
+	p.Delete(s.sid)
+	s.data = nil
+	s.closed = true;
+	s.lock.Unlock()
+	
+	//	Delete remote session from Redis
+	go delete_remote_session(context.Background(), s.sid)
 }
 
 func fetch_session(ctx context.Context, p *pool, sid string) *session {
@@ -118,6 +128,7 @@ func fetch_session(ctx context.Context, p *pool, sid string) *session {
 		if time_unix() > local.expires {
 			return nil
 		}
+		local.lock.Lock()
 		return local
 	}
 	
@@ -142,6 +153,7 @@ func new(p *pool, sid string) *session {
 		expires:	expires(),
 		data:		session_data{},
 	}
+	s.lock.Lock()
 	p.Set(sid, s)
 	return s
 }
@@ -157,6 +169,12 @@ func update_remote_session(ctx context.Context, s *session){
 	}
 }
 
+func delete_remote_session(ctx context.Context, sid string){
+	if err := rdb.Delete(ctx, fmt.Sprintf(SESSION_HASH, sid)); err != nil {
+		panic(err)
+	}
+}
+
 func (s *session) reset(){
 	s.closed 	= false
 	s.expires 	= expires()
@@ -164,7 +182,6 @@ func (s *session) reset(){
 
 func set_cookie(w http.ResponseWriter) string {
 	sid := uuid.NewString()
-	//fmt.Println("set cookie sid:", sid)
 	serv.Set_cookie(w, COOKIE_NAME, sid, 0)
 	return sid
 }
