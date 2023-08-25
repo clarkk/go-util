@@ -15,11 +15,12 @@ import (
 )
 
 const (
-	ALL 	= "*"
-	GET 	= "GET"
-	POST 	= "POST"
-	PUT 	= "PUT"
-	DEL 	= "DELETE"
+	ALL 		= "*"
+	GET 		= "GET"
+	POST 		= "POST"
+	DEL 		= "DELETE"
+	
+	ctx_http 	ctx_key = ""
 )
 
 type (
@@ -38,6 +39,8 @@ type (
 		regex 		*regexp.Regexp
 		handler		http.HandlerFunc
 	}
+	
+	ctx_key 		string
 	
 	ctx_slugs struct {}
 )
@@ -59,7 +62,7 @@ func Recover(w http.ResponseWriter){
 }
 
 func Get_pattern_slug(r *http.Request, index int) string {
-	fields := r.Context().Value(ctx_slugs{}).([]string)
+	fields := r.Context().Value(ctx_http).([]string)
 	return fields[index]
 }
 
@@ -110,7 +113,7 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			
-			ctx := context.WithValue(r.Context(), ctx_slugs{}, matches[1:])
+			ctx := context.WithValue(r.Context(), ctx_http, matches[1:])
 			route.handler(w, r.WithContext(ctx))
 			return
 		}
