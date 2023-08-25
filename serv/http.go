@@ -63,6 +63,16 @@ func Get_pattern_slug(r *http.Request, index int) string {
 	return fields[index]
 }
 
+func Set_cookie(w http.ResponseWriter, name string, value string, max_age int){
+	http.SetCookie(w, &http.Cookie{
+		Name:		name,
+		Value:		value,
+		MaxAge:		max_age,
+		Secure:		true,
+		HttpOnly:	true,
+	})
+}
+
 func (h *HTTP) Test(){
 	cutil.Out("HTTP server in test-mode")
 	h.test = true
