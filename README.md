@@ -1,5 +1,5 @@
 # go-util/serv
-HTTP server with regex patterns as routes
+Leightweight HTTP server with regex patterns as routes
 
 ```
 package main
@@ -51,4 +51,39 @@ func main(){
   
   h.Run()
 }
+```
+
+# go-util/sess
+HTTP sessions with read-locks to prevent concurrent requests to read data from the same session
+
+```
+//  Connect to Redis
+rdb.Connect(REDIS_AUTH)
+//  Start session pool
+sessions := sess.Init()
+
+h.Route(serv.ALL, "/", func(w http.ResponseWriter, r *http.Request){
+  defer serv.Recover(w)
+  
+  //  Start session with read-lock
+  s := sess.Start(sessions, w, r)
+  defer s.Close()
+  
+  //  Get session data
+  session_data := s.Get()
+  fmt.Println("session data:", session_data)
+  
+  //  Write data to session
+  session_data["test"] = "My data"
+  s.Write(data)
+  
+  //  Get session from request context
+  s = sess.Session(r)
+  session_data = s.Get()
+  
+  //  Close session as soon as possible to release the read-lock
+  s.Close()
+  
+  io.WriteString(w, "Hello world!")
+})
 ```
