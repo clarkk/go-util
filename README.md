@@ -1,7 +1,7 @@
 # go-util/serv
 Leightweight HTTP server
 - With regex patterns in routes
-- Allowed specific HTTP requests to routes
+- Bind HTTP methods to routes
 
 ```
 package main
