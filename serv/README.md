@@ -1,4 +1,4 @@
-# go-util
+# go-util/serv
 HTTP server with regex patterns as routes
 
 ```
