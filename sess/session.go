@@ -72,6 +72,25 @@ func Start(p *pool, w http.ResponseWriter, r *http.Request) *session {
 	return s
 }
 
+//	Regenerate session id
+func (s *session) Regenerate(p *pool, w http.ResponseWriter){
+	if s.closed {
+		panic("Can not regenerate a closed session")
+	}
+	
+	ctx := context.Background()
+	
+	//	Delete remote session from Redis
+	go delete_remote_session(ctx, s.sid)
+	
+	p.Delete(s.sid)
+	s.sid = set_cookie(w)
+	p.Set(s.sid, s)
+	
+	//	Update remote session from Redis
+	go update_remote_session(ctx, s)
+}
+
 //	Get session from request context
 func Session(r *http.Request) *session {
 	s, ok := r.Context().Value(ctx_session).(*session)

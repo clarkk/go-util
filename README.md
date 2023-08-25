@@ -1,5 +1,5 @@
 # go-util/serv
-Leightweight HTTP server
+Lightweight HTTP server
 - With regex patterns in routes
 - Bind HTTP methods to routes
 
@@ -56,7 +56,7 @@ func main(){
 ```
 
 # go-util/sess
-Leightweight HTTP sessions
+Lightweight HTTP sessions
 - With read/write locks to prevent concurrent requests to read data when another is writing data
 - Handles all sessions internal in Go to optimize I/O performance
 - Uses Redis as failover if Go HTTP server is restarted to preserve and recover sessions
