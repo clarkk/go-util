@@ -36,10 +36,6 @@ func Connected() bool {
 	return connected
 }
 
-func Set(ctx context.Context, key string, value []byte, expires int) error {
-	return client.Set(ctx, key, value, time.Duration(expires) * time.Second).Err()
-}
-
 func Get(ctx context.Context, key string) (string, bool) {
 	value, err := client.Get(ctx, key).Result()
 	if err != nil && err != redis.Nil {
@@ -47,4 +43,12 @@ func Get(ctx context.Context, key string) (string, bool) {
 	}
 	found := err != redis.Nil
 	return value, found
+}
+
+func Set(ctx context.Context, key string, value []byte, expires int) error {
+	return client.Set(ctx, key, value, time.Duration(expires) * time.Second).Err()
+}
+
+func Delete(ctx context.Context, key string) error {
+	return client.Del(ctx, key).Err()
 }
