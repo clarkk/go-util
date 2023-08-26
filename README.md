@@ -64,7 +64,7 @@ h.Route(serv.POST, "/post", func(w http.ResponseWriter, r *http.Request){
 ## Regex pattern
 All routes will automatically be prefixed with a `^` starting anchor and regex precompiled
 
-`/base_path/([^/]+)` will be compiled as `^/base_path/([^/]+)`
+`/base_path/([^/]+)` is compiled as `^/base_path/([^/]+)`
 ```
 h.Route(serv.ALL, "/base_path/([^/]+)/test/([^/]+)", func(w http.ResponseWriter, r *http.Request){
   defer serv.Recover(w)
