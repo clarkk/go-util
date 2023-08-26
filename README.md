@@ -1,3 +1,6 @@
+# Install
+`go get -u github.com/clarkk/go-util`
+
 # go-util/serv
 Lightweight HTTP server
 - With regex patterns in routes
@@ -89,24 +92,30 @@ Lightweight HTTP sessions
 
 ### Example
 ```
+import (
+  "github.com/clarkk/go-util/rdb"
+  "github.com/clarkk/go-util/sess"
+)
+
 //  Connect to Redis
 rdb.Connect(REDIS_AUTH)
+
 //  Initiate session pool and maintenance tasks
 sess.Init()
 
 h.Route(serv.ALL, "/", func(w http.ResponseWriter, r *http.Request){
   defer serv.Recover(w)
   
-  //  Start session with read-lock
+  //  Start session (with read-lock)
   s := sess.Start(w, r)
   defer s.Close()
   
   //  Get session data
-  session_data := s.Get()
-  fmt.Println("session data:", session_data)
+  data := s.Get()
+  fmt.Println("session data:", data)
   
   //  Write data to session
-  session_data["test"] = "My data"
+  data["test"] = "My data"
   s.Write(data)
   
   //  Close session as soon as possible to release the read-lock
@@ -116,12 +125,12 @@ h.Route(serv.ALL, "/", func(w http.ResponseWriter, r *http.Request){
 })
 ```
 
-## Login (start, regenerate session and close)
+## Login (start, regenerate session id and close)
 ```
 h.Route(serv.ALL, "/", func(w http.ResponseWriter, r *http.Request){
   defer serv.Recover(w)
   
-  //  Start session with read-lock
+  //  Start session (with read-lock)
   s := sess.Start(w, r)
   defer s.Close()
   
@@ -144,11 +153,11 @@ h.Route(serv.ALL, "/", func(w http.ResponseWriter, r *http.Request){
 h.Route(serv.ALL, "/", func(w http.ResponseWriter, r *http.Request){
   defer serv.Recover(w)
   
-  //  Start session with read-lock
+  //  Start session (with read-lock)
   s := sess.Start(w, r)
   defer s.Close()
   
-  //  Destroy session (will automatically close the session)
+  //  Destroy session (will close the session)
   s.Destroy()
   
   io.WriteString(w, "Hello world!")
@@ -165,11 +174,11 @@ h.Route(serv.ALL, "/", func(w http.ResponseWriter, r *http.Request){
   defer s.Close()
   
   //  Get session data
-  session_data := s.Get()
-  fmt.Println("session data:", session_data)
+  data := s.Get()
+  fmt.Println("session data:", data)
   
   //  Write data to session
-  session_data["test"] = "My data"
+  data["test"] = "My data"
   s.Write(data)
   
   //  Close session as soon as possible to release the read-lock
@@ -181,6 +190,6 @@ h.Route(serv.ALL, "/", func(w http.ResponseWriter, r *http.Request){
 
 ## Get session from `r *http.Request` context
 ```
-s = sess.Session(r)
-session_data = s.Get()
+s := sess.Session(r)
+data = s.Get()
 ```
