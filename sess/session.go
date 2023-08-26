@@ -128,7 +128,7 @@ func (s *session) Close(){
 }
 
 //	Destroy and delete session
-func (s *session) Destroy(){
+func (s *session) Destroy(w http.ResponseWriter){
 	if s.closed {
 		panic("Can not destroy closed session")
 	}
