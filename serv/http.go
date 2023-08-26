@@ -57,7 +57,7 @@ func NewHTTP(host string, port int) *HTTP {
 func Recover(w http.ResponseWriter){
 	if r := recover(); r != nil {
 		http.Error(w, "Unexpected error", http.StatusBadRequest)
-		log.Println(r, string(debug.Stack()))
+		log.Println(r, "\n"+string(debug.Stack()))
 	}
 }
 
