@@ -9,10 +9,15 @@ package main
 
 import (
   "fmt"
+  "log"
   "io"
   "net/http"
   "github.com/clarkk/go-util/serv"
 )
+
+func init(){
+  log.SetFlags(log.LstdFlags | log.Llongfile | log.Lmicroseconds)
+}
 
 func main(){
   h := serv.NewHTTP("127.0.0.1", 3000)
