@@ -133,7 +133,7 @@ func (s *session) Destroy(w http.ResponseWriter){
 		panic("Can not destroy closed session")
 	}
 	
-	serv.Set_cookie(w, COOKIE_NAME, "", 0)
+	serv.Set_cookie(w, COOKIE_NAME, "", -1)
 	p.delete(s.sid)
 	s.data = nil
 	s.closed = true;
