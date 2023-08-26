@@ -76,6 +76,16 @@ func Set_cookie(w http.ResponseWriter, name string, value string, max_age int){
 	})
 }
 
+func Delete_cookie(w http.ResponseWriter, name string){
+	http.SetCookie(w, &http.Cookie{
+		Name:		name,
+		Value:		"",
+		MaxAge:		-1,
+		Secure:		true,
+		HttpOnly:	true,
+	})
+}
+
 func (h *HTTP) Test(){
 	cutil.Out("HTTP server in test-mode")
 	h.test = true
