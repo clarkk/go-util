@@ -90,10 +90,10 @@ func (s *session) Regenerate(w http.ResponseWriter){
 	ctx := context.Background()
 	
 	//	Delete session
-	go delete_remote_session(ctx, s.sid)
 	p.delete(s.sid)
+	go delete_remote_session(ctx, s.sid)
 	
-	//	Regenerate and update
+	//	Regenerate and update session
 	s.sid = set_cookie(w)
 	p.set(s.sid, s)
 	go update_remote_session(ctx, s)
@@ -133,6 +133,7 @@ func (s *session) Destroy(){
 		panic("Can not destroy closed session")
 	}
 	
+	serv.Set_cookie(w, COOKIE_NAME, "", 0)
 	p.delete(s.sid)
 	s.data = nil
 	s.closed = true;
