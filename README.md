@@ -65,13 +65,13 @@ Lightweight HTTP sessions
 //  Connect to Redis
 rdb.Connect(REDIS_AUTH)
 //  Start session pool
-sessions := sess.Init()
+sess.Init()
 
 h.Route(serv.ALL, "/", func(w http.ResponseWriter, r *http.Request){
   defer serv.Recover(w)
   
   //  Start session with read-lock
-  s := sess.Start(sessions, w, r)
+  s := sess.Start(w, r)
   defer s.Close()
   
   //  Get session data
@@ -81,6 +81,12 @@ h.Route(serv.ALL, "/", func(w http.ResponseWriter, r *http.Request){
   //  Write data to session
   session_data["test"] = "My data"
   s.Write(data)
+  
+  //  Regenerate session id
+  s.Regenerate(w)
+  
+  //  Destroy session
+  s.Destroy()
   
   //  Get session from request context
   s = sess.Session(r)

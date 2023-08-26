@@ -35,7 +35,7 @@ type (
 )
 
 //	Start session and lock for other concurrent requests to read data from the same session
-func Start(p *pool, w http.ResponseWriter, r *http.Request) *session {
+func Start(w http.ResponseWriter, r *http.Request) *session {
 	if !rdb.Connected() {
 		panic("Redis is not connected")
 	}
@@ -51,14 +51,14 @@ func Start(p *pool, w http.ResponseWriter, r *http.Request) *session {
 	if err != nil {
 		//	Create session cookie and start new session
 		sid 	= set_cookie(w)
-		s 		= new(p, sid)
+		s 		= new(sid)
 	}else{
 		sid 	= cookie.Value
-		s 		= fetch_session(ctx, p, sid)
+		s 		= fetch_session(ctx, sid)
 		if s == nil {
 			//	Create session cookie and start new session
 			sid 	= set_cookie(w)
-			s 		= new(p, sid)
+			s 		= new(sid)
 		}else{
 			//	Continue session
 			s.reset()
@@ -72,25 +72,6 @@ func Start(p *pool, w http.ResponseWriter, r *http.Request) *session {
 	return s
 }
 
-//	Regenerate session id
-func (s *session) Regenerate(p *pool, w http.ResponseWriter){
-	if s.closed {
-		panic("Can not regenerate a closed session")
-	}
-	
-	ctx := context.Background()
-	
-	//	Delete remote session from Redis
-	go delete_remote_session(ctx, s.sid)
-	
-	p.Delete(s.sid)
-	s.sid = set_cookie(w)
-	p.Set(s.sid, s)
-	
-	//	Update remote session from Redis
-	go update_remote_session(ctx, s)
-}
-
 //	Get session from request context
 func Session(r *http.Request) *session {
 	s, ok := r.Context().Value(ctx_session).(*session)
@@ -98,6 +79,29 @@ func Session(r *http.Request) *session {
 		return nil
 	}
 	return s
+}
+
+//	Regenerate session id
+func (s *session) Regenerate(w http.ResponseWriter){
+	if s.closed {
+		panic("Can not regenerate a closed session")
+	}
+	
+	ctx := context.Background()
+	
+	//	Delete session
+	go delete_remote_session(ctx, s.sid)
+	p.delete(s.sid)
+	
+	//	Regenerate and update
+	s.sid = set_cookie(w)
+	p.set(s.sid, s)
+	go update_remote_session(ctx, s)
+}
+
+//	Get session ID
+func (s *session) Get_sid() string {
+	return s.sid
 }
 
 //	Get session data
@@ -119,30 +123,26 @@ func (s *session) Close(){
 	if !s.closed {
 		s.closed = true;
 		s.lock.Unlock()
-		
-		//	Update remote session from Redis
 		go update_remote_session(context.Background(), s)
 	}
 }
 
 //	Destroy and delete session
-func (s *session) Destroy(p *pool){
+func (s *session) Destroy(){
 	if s.closed {
 		panic("Can not destroy closed session")
 	}
 	
-	p.Delete(s.sid)
+	p.delete(s.sid)
 	s.data = nil
 	s.closed = true;
 	s.lock.Unlock()
-	
-	//	Delete remote session from Redis
 	go delete_remote_session(context.Background(), s.sid)
 }
 
-func fetch_session(ctx context.Context, p *pool, sid string) *session {
+func fetch_session(ctx context.Context, sid string) *session {
 	//	Get local session
-	local, ok := p.Get(sid)
+	local, ok := p.get(sid)
 	if ok {
 		if time_unix() > local.expires {
 			return nil
@@ -155,7 +155,7 @@ func fetch_session(ctx context.Context, p *pool, sid string) *session {
 	remote, _ := rdb.Get(ctx, fmt.Sprintf(SESSION_HASH, sid))
 	if remote != "" {
 		//	Copy and use remote session
-		s := new(p, sid)
+		s := new(sid)
 		err := json.Unmarshal([]byte(remote), &s.data)
 		if err != nil {
 			panic(err)
@@ -166,14 +166,14 @@ func fetch_session(ctx context.Context, p *pool, sid string) *session {
 	return nil
 }
 
-func new(p *pool, sid string) *session {
+func new(sid string) *session {
 	s := &session{
 		sid:		sid,
 		expires:	expires(),
 		data:		session_data{},
 	}
 	s.lock.Lock()
-	p.Set(sid, s)
+	p.set(sid, s)
 	return s
 }
 
