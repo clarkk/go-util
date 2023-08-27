@@ -2,37 +2,11 @@ package sess
 
 import (
 	"sync"
-	"time"
-)
-
-const (
-	purge_interval 	= 5
-)
-
-var (
-	p 				*pool
-	once 			sync.Once
 )
 
 type pool struct {
 	lock 			sync.RWMutex
 	sessions 		map[string]*session
-}
-
-func Init() {
-	once.Do(func() {
-		p = &pool{
-			sessions: map[string]*session{},
-		}
-		
-		//	Purge inactive sessions from pool
-		ticker := time.NewTicker(purge_interval * time.Minute)
-		go func(){
-			for range ticker.C {
-				go p.purge_expired()
-			}
-		}()
-	})
 }
 
 func (p *pool) set(sid string, s *session){

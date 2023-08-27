@@ -13,26 +13,82 @@ import (
 )
 
 const (
-	COOKIE_NAME 	= "session_token"
-	SESSION_HASH 	= "GOREDIS_SESS:%s"
-	EXPIRES 		= 60 * 20
+	default_cookie_name 	= "session_token"
+	default_remote_hash 	= "GOREDIS_SESS:%s"
+	default_expires 		= 60 * 20
+	default_purge_interval 	= 5 * time.Minute
 	
-	ctx_session 	ctx_key = ""
+	ctx_session 			ctx_key = ""
+)
+
+var (
+	p 				*pool
+	once 			sync.Once
+	cfg 			*config
 )
 
 type (
-	session struct {
-		sid 		string
-		lock 		sync.Mutex
-		closed 		bool
-		expires 	int
-		data 		session_data
+	config struct {
+		context 		bool
+		cookie_name 	string
+		remote_hash 	string
+		expires 		int
+		purge_interval 	time.Duration
 	}
 	
-	session_data 	map[string]string
+	Option 				func(*config)
 	
-	ctx_key 		string
+	session struct {
+		sid 			string
+		lock 			sync.Mutex
+		closed 			bool
+		expires 		int
+		data 			session_data
+	}
+	
+	session_data 		map[string]string
+	
+	ctx_key 			string
 )
+
+func Use_context() Option {
+	return func(o *config){
+		o.context = true
+	}
+}
+
+func Use_expires(secs int) Option {
+	return func(o *config){
+		o.expires = secs
+	}
+}
+
+func Init(opts ...Option){
+	once.Do(func(){
+		cfg = &config{
+			cookie_name:	default_cookie_name,
+			remote_hash:	default_remote_hash,
+			expires:		default_expires,
+			purge_interval:	default_purge_interval,
+		}
+		
+		for _, opt := range opts {
+			opt(cfg)
+		}
+		
+		p = &pool{
+			sessions: map[string]*session{},
+		}
+		
+		//	Purge inactive sessions from pool
+		ticker := time.NewTicker(cfg.purge_interval)
+		go func(){
+			for range ticker.C {
+				go p.purge_expired()
+			}
+		}()
+	})
+}
 
 //	Start session and lock for other concurrent requests to read data from the same session
 func Start(w http.ResponseWriter, r *http.Request) *session {
@@ -47,7 +103,7 @@ func Start(w http.ResponseWriter, r *http.Request) *session {
 		s 		*session
 	)
 	
-	cookie, err := r.Cookie(COOKIE_NAME)
+	cookie, err := r.Cookie(cfg.cookie_name)
 	if err != nil {
 		//	Create session cookie and start new session
 		sid 	= set_cookie(w)
@@ -65,15 +121,21 @@ func Start(w http.ResponseWriter, r *http.Request) *session {
 		}
 	}
 	
-	ctx = context.WithValue(ctx, ctx_session, s)
-	r2 := r.WithContext(ctx)
-	*r = *r2
+	if cfg.context {
+		ctx = context.WithValue(ctx, ctx_session, s)
+		r2 := r.WithContext(ctx)
+		*r = *r2
+	}
 	
 	return s
 }
 
 //	Get session from request context
 func Session(r *http.Request) *session {
+	if !cfg.context {
+		panic("Session context feature is disabled")
+	}
+	
 	s, ok := r.Context().Value(ctx_session).(*session)
 	if !ok {
 		return nil
@@ -133,7 +195,7 @@ func (s *session) Destroy(w http.ResponseWriter){
 		panic("Can not destroy closed session")
 	}
 	
-	serv.Delete_cookie(w, COOKIE_NAME)
+	serv.Delete_cookie(w, cfg.cookie_name)
 	p.delete(s.sid)
 	s.data = nil
 	s.closed = true;
@@ -153,7 +215,7 @@ func fetch_session(ctx context.Context, sid string) *session {
 	}
 	
 	//	Get remote session from Redis
-	remote, _ := rdb.Get(ctx, fmt.Sprintf(SESSION_HASH, sid))
+	remote, _ := rdb.Get(ctx, sid_hash(sid))
 	if remote != "" {
 		//	Copy and use remote session
 		s := new(sid)
@@ -184,13 +246,13 @@ func update_remote_session(ctx context.Context, s *session){
 		panic(err_json)
 	}
 	
-	if err := rdb.Set(ctx, fmt.Sprintf(SESSION_HASH, s.sid), json_bytes, EXPIRES); err != nil {
+	if err := rdb.Set(ctx, fmt.Sprintf(cfg.remote_hash, s.sid), json_bytes, cfg.expires); err != nil {
 		panic(err)
 	}
 }
 
 func delete_remote_session(ctx context.Context, sid string){
-	if err := rdb.Delete(ctx, fmt.Sprintf(SESSION_HASH, sid)); err != nil {
+	if err := rdb.Delete(ctx, sid_hash(sid)); err != nil {
 		panic(err)
 	}
 }
@@ -202,12 +264,16 @@ func (s *session) reset(){
 
 func set_cookie(w http.ResponseWriter) string {
 	sid := uuid.NewString()
-	serv.Set_cookie(w, COOKIE_NAME, sid, 0)
+	serv.Set_cookie(w, cfg.cookie_name, sid, 0)
 	return sid
 }
 
+func sid_hash(sid string) string {
+	return fmt.Sprintf(cfg.remote_hash, sid)
+}
+
 func expires() int {
-	return time_unix() + EXPIRES
+	return time_unix() + cfg.expires
 }
 
 func time_unix() int {

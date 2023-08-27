@@ -4,6 +4,7 @@ import (
 	"log"
 	"fmt"
 	"os"
+	"time"
 	"strings"
 	"regexp"
 	"context"
@@ -102,7 +103,16 @@ func (h *HTTP) Route(method string, pattern string, handler http.HandlerFunc){
 func (h *HTTP) Run(){
 	cutil.Out(fmt.Sprintf("Listening on: %s:%d, %s (pid: %d, GOMAXPROCS: %d) running as '%s'", h.host, h.port, h.tld, os.Getpid(), runtime.GOMAXPROCS(0), cutil.Get_user().Username))
 	
-	err := http.ListenAndServe(fmt.Sprintf("%s:%d", h.host, h.port), http.HandlerFunc(h.serve))
+	srv := &http.Server{
+		Addr:				fmt.Sprintf("%s:%d", h.host, h.port),
+		Handler:			http.HandlerFunc(h.serve),
+		//ReadTimeout:		5 * time.Second,
+		ReadHeaderTimeout:	100 * time.Millisecond,
+		//WriteTimeout:		10 * time.Second,
+		IdleTimeout:		30 * time.Second,
+	}
+	
+	err := srv.ListenAndServe()
 	if err != nil {
 		pid, name := h.used_port_pid()
 		if pid != "" {
