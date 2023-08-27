@@ -74,7 +74,7 @@ All routes will automatically be prefixed with a `^` starting anchor and regex p
 
 `/base_path/([^/]+)` is compiled as `^/base_path/([^/]+)`
 ```
-h.Route(serv.ALL, "/base_path/([^/]+)/test/([^/]+)", func(w http.ResponseWriter, r *http.Request){
+h.Route_regex(serv.ALL, "/base_path/([^/]+)/test/([^/]+)", func(w http.ResponseWriter, r *http.Request){
   defer serv.Recover(w)
   
   slug1 := serv.Get_pattern_slug(r, 0)

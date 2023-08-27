@@ -37,6 +37,7 @@ type (
 	
 	route struct {
 		method 		string
+		path 		string
 		regex 		*regexp.Regexp
 		handler		http.HandlerFunc
 	}
@@ -67,26 +68,6 @@ func Get_pattern_slug(r *http.Request, index int) string {
 	return fields[index]
 }
 
-func Set_cookie(w http.ResponseWriter, name string, value string, max_age int){
-	http.SetCookie(w, &http.Cookie{
-		Name:		name,
-		Value:		value,
-		MaxAge:		max_age,
-		Secure:		true,
-		HttpOnly:	true,
-	})
-}
-
-func Delete_cookie(w http.ResponseWriter, name string){
-	http.SetCookie(w, &http.Cookie{
-		Name:		name,
-		Value:		"",
-		MaxAge:		-1,
-		Secure:		true,
-		HttpOnly:	true,
-	})
-}
-
 func (h *HTTP) Test(){
 	cutil.Out("HTTP server in test-mode")
 	h.test = true
@@ -95,6 +76,16 @@ func (h *HTTP) Test(){
 func (h *HTTP) Route(method string, pattern string, handler http.HandlerFunc){
 	h.routes = append(h.routes, &route{
 		method,
+		pattern,
+		nil,
+		handler,
+	})
+}
+
+func (h *HTTP) Route_regex(method string, pattern string, handler http.HandlerFunc){
+	h.routes = append(h.routes, &route{
+		method,
+		"",
 		regexp.MustCompile("^"+pattern),
 		handler,
 	})
@@ -126,16 +117,30 @@ func (h *HTTP) Run(){
 func (h *HTTP) serve(w http.ResponseWriter, r *http.Request) {
 	var allow []string
 	for _, route := range h.routes {
-		matches := route.regex.FindStringSubmatch(r.URL.Path)
-		if len(matches) > 0 {
-			if route.method != ALL && r.Method != route.method {
-				allow = append(allow, route.method)
-				continue
+		if route.regex != nil {
+			//	Regex path
+			matches := route.regex.FindStringSubmatch(r.URL.Path)
+			if len(matches) > 0 {
+				if route.method != ALL && r.Method != route.method {
+					allow = append(allow, route.method)
+					continue
+				}
+				
+				ctx := context.WithValue(r.Context(), ctx_http, matches[1:])
+				route.handler(w, r.WithContext(ctx))
+				return
 			}
-			
-			ctx := context.WithValue(r.Context(), ctx_http, matches[1:])
-			route.handler(w, r.WithContext(ctx))
-			return
+		}else{
+			//	Path
+			if strings.HasPrefix(r.URL.Path, route.path) {
+				if route.method != ALL && r.Method != route.method {
+					allow = append(allow, route.method)
+					continue
+				}
+				
+				route.handler(w, r)
+				return
+			}
 		}
 	}
 	
