@@ -28,6 +28,8 @@ var (
 )
 
 type (
+	Option 				func(*config)
+	
 	config struct {
 		context 		bool
 		cookie_name 	string
@@ -36,10 +38,9 @@ type (
 		purge_interval 	time.Duration
 	}
 	
-	Option 				func(*config)
-	
 	session struct {
 		sid 			string
+		w 				http.ResponseWriter
 		lock 			sync.Mutex
 		closed 			bool
 		expires 		int
@@ -121,6 +122,8 @@ func Start(w http.ResponseWriter, r *http.Request) *session {
 		}
 	}
 	
+	s.w = w
+	
 	if cfg.context {
 		ctx = context.WithValue(ctx, ctx_session, s)
 		r2 := r.WithContext(ctx)
@@ -144,7 +147,7 @@ func Session(r *http.Request) *session {
 }
 
 //	Regenerate session id
-func (s *session) Regenerate(w http.ResponseWriter){
+func (s *session) Regenerate(){
 	if s.closed {
 		panic("Can not regenerate a closed session")
 	}
@@ -156,7 +159,7 @@ func (s *session) Regenerate(w http.ResponseWriter){
 	go delete_remote_session(ctx, s.sid)
 	
 	//	Regenerate and update session
-	s.sid = set_cookie(w)
+	s.sid = set_cookie(s.w)
 	p.set(s.sid, s)
 	go update_remote_session(ctx, s)
 }
@@ -183,22 +186,24 @@ func (s *session) Write(data session_data){
 //	Close session for further writes and release read lock
 func (s *session) Close(){
 	if !s.closed {
-		s.closed = true;
+		s.w 		= nil
+		s.closed 	= true;
 		s.lock.Unlock()
 		go update_remote_session(context.Background(), s)
 	}
 }
 
 //	Destroy and delete session
-func (s *session) Destroy(w http.ResponseWriter){
+func (s *session) Destroy(){
 	if s.closed {
 		panic("Can not destroy closed session")
 	}
 	
-	serv.Delete_cookie(w, cfg.cookie_name)
+	serv.Delete_cookie(s.w, cfg.cookie_name)
 	p.delete(s.sid)
-	s.data = nil
-	s.closed = true;
+	s.w 		= nil
+	s.data 		= nil
+	s.closed 	= true;
 	s.lock.Unlock()
 	go delete_remote_session(context.Background(), s.sid)
 }

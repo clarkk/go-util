@@ -139,7 +139,7 @@ h.Route(serv.ALL, "/", func(w http.ResponseWriter, r *http.Request){
   */
   
   //  Regenerate session id after authentication
-  s.Regenerate(w)
+  s.Regenerate()
   
   //  Close session as soon as possible to release the read-lock
   s.Close()
@@ -189,7 +189,12 @@ h.Route(serv.ALL, "/", func(w http.ResponseWriter, r *http.Request){
 ```
 
 ## Get session from `r *http.Request` context
+This feature has to be enabled
 ```
+sess.Init(
+  sess.Use_context()
+)
+
 s := sess.Session(r)
 data = s.Get()
 ```
