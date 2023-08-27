@@ -118,14 +118,19 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request) {
 		if route.regex != nil {
 			//	Regex path
 			matches := route.regex.FindStringSubmatch(r.URL.Path)
-			if len(matches) > 0 {
+			len 	:= len(matches)
+			if len > 0 {
 				if route.method != ALL && r.Method != route.method {
 					allow = append(allow, route.method)
 					continue
 				}
 				
-				ctx := context.WithValue(r.Context(), ctx_http, matches[1:])
-				route.handler(w, r.WithContext(ctx))
+				if len == 1 {
+					route.handler(w, r)
+				}else{
+					ctx := context.WithValue(r.Context(), ctx_http, matches[1:])
+					route.handler(w, r.WithContext(ctx))
+				}
 				return
 			}
 		}else{
