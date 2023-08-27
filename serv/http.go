@@ -19,7 +19,7 @@ const (
 	ALL 		= "*"
 	GET 		= "GET"
 	POST 		= "POST"
-	DEL 		= "DELETE"
+	DELETE 		= "DELETE"
 	
 	ctx_http 	ctx_key = ""
 )
@@ -43,8 +43,6 @@ type (
 	}
 	
 	ctx_key 		string
-	
-	ctx_slugs struct {}
 )
 
 func NewHTTP(host string, port int) *HTTP {
