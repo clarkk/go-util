@@ -186,8 +186,8 @@ func (s *session) Write(data session_data){
 //	Close session for further writes and release read lock
 func (s *session) Close(){
 	if !s.closed {
-		s.w 		= nil
 		s.closed 	= true;
+		s.w 		= nil
 		s.lock.Unlock()
 		go update_remote_session(context.Background(), s)
 	}
@@ -199,11 +199,11 @@ func (s *session) Destroy(){
 		panic("Can not destroy closed session")
 	}
 	
+	s.closed 	= true;
 	serv.Delete_cookie(s.w, cfg.cookie_name)
 	p.delete(s.sid)
 	s.w 		= nil
 	s.data 		= nil
-	s.closed 	= true;
 	s.lock.Unlock()
 	go delete_remote_session(context.Background(), s.sid)
 }
