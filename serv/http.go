@@ -39,6 +39,7 @@ type (
 		method 		string
 		path 		string
 		regex 		*regexp.Regexp
+		timeout 	int
 		handler		http.HandlerFunc
 	}
 	
@@ -71,20 +72,22 @@ func (h *HTTP) Test(){
 	h.test = true
 }
 
-func (h *HTTP) Route(method string, pattern string, handler http.HandlerFunc){
+func (h *HTTP) Route(method string, pattern string, timeout int, handler http.HandlerFunc){
 	h.routes = append(h.routes, &route{
 		method,
 		pattern,
 		nil,
+		timeout,
 		handler,
 	})
 }
 
-func (h *HTTP) Route_regex(method string, pattern string, handler http.HandlerFunc){
+func (h *HTTP) Route_regex(method string, pattern string, timeout int, handler http.HandlerFunc){
 	h.routes = append(h.routes, &route{
 		method,
 		"",
 		regexp.MustCompile("^"+pattern),
+		timeout,
 		handler,
 	})
 }
@@ -113,7 +116,13 @@ func (h *HTTP) Run(){
 }
 
 func (h *HTTP) serve(w http.ResponseWriter, r *http.Request) {
-	var allow []string
+	var (
+		match_route 	*route
+		allow 			[]string
+	)
+	
+	ctx := r.Context()
+	
 	for _, route := range h.routes {
 		if route.regex != nil {
 			//	Regex path
@@ -125,13 +134,13 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request) {
 					continue
 				}
 				
-				if len == 1 {
-					route.handler(w, r)
-				}else{
-					ctx := context.WithValue(r.Context(), ctx_http, matches[1:])
-					route.handler(w, r.WithContext(ctx))
+				//	Slug group capture
+				if len > 1 {
+					ctx = context.WithValue(ctx, ctx_http, matches[1:])
 				}
-				return
+				
+				match_route = route
+				break
 			}
 		}else{
 			//	Path
@@ -141,19 +150,38 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request) {
 					continue
 				}
 				
-				route.handler(w, r)
-				return
+				match_route = route
+				break
 			}
 		}
 	}
 	
-	if len(allow) > 0 {
-		w.Header().Set("Allow", strings.Join(allow, ", "))
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
+	if match_route != nil {
+		//	Apply timeout context
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, time.Duration(time.Duration(match_route.timeout) * time.Second))
+		defer cancel()
+		
+		go func(){
+			match_route.handler(w, r.WithContext(ctx))
+			cancel()
+		}()
+		
+		select {
+		case <-ctx.Done():
+			if ctx.Err() == context.DeadlineExceeded {
+				http.Error(w, "Timeout", http.StatusRequestTimeout)
+			}
+		}
+	}else{
+		//	No pattern match
+		if len(allow) > 0 {
+			w.Header().Set("Allow", strings.Join(allow, ", "))
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}else{
+			http.Error(w, "Not found", http.StatusNotFound)
+		}
 	}
-	
-	http.Error(w, "Not found", http.StatusNotFound)
 }
 
 func (h *HTTP) used_port_pid() (string, string){
