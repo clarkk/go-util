@@ -52,6 +52,7 @@ type (
 	ctx_key 			string
 )
 
+//	Enable fetching session from *http.Request context
 func Use_context() Option {
 	return func(o *config){
 		o.context = true
@@ -78,7 +79,7 @@ func Init(opts ...Option){
 		}
 		
 		p = &pool{
-			sessions: map[string]*session{},
+			sessions: sessions{},
 		}
 		
 		//	Purge inactive sessions from pool
@@ -133,7 +134,7 @@ func Start(w http.ResponseWriter, r *http.Request) *session {
 	return s
 }
 
-//	Get session from request context
+//	Fetch session from request context
 func Session(r *http.Request) *session {
 	if !cfg.context {
 		panic("Session context feature is disabled")

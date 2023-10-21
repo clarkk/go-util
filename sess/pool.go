@@ -4,10 +4,14 @@ import (
 	"sync"
 )
 
-type pool struct {
-	lock 			sync.RWMutex
-	sessions 		map[string]*session
-}
+type (
+	sessions 			map[string]*session
+	
+	pool struct {
+		lock 			sync.RWMutex
+		sessions 		sessions
+	}
+)
 
 func (p *pool) set(sid string, s *session){
 	p.lock.Lock()
