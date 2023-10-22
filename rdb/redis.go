@@ -45,13 +45,19 @@ func Get(ctx context.Context, key string) (string, bool) {
 	return value, found
 }
 
-func Hgetall(ctx context.Context, key string) (map[string]string, bool) {
-	res, err := client.HGetAll(ctx, key).Result()
+func Hgetall(ctx context.Context, key string, ref interface{}) bool {
+	res := client.HGetAll(ctx, key)
+	err := res.Err()
 	if err != nil && err != redis.Nil {
 		panic(err)
 	}
 	found := err != redis.Nil
-	return res, found
+	if found {
+		if err := res.Scan(ref); err != nil {
+			panic(err)
+		}
+	}
+	return found
 }
 
 func Set(ctx context.Context, key string, value []byte, expires int) error {
