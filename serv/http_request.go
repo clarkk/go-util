@@ -18,7 +18,7 @@ func Get_client_IP(r *http.Request) string{
 	return ip
 }
 
-func Get_path_slugs(base string, r *http.Request) (string, []string){
+func Get_path_slugs(r *http.Request, base string) (string, []string){
 	path := strings.TrimRight(r.URL.Path, "/")
 	if !strings.HasPrefix(path, base) {
 		panic("Base path is not a prefix of path")

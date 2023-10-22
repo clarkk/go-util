@@ -37,7 +37,7 @@ func main(){
   h.Route(serv.ALL, "/", 60, func(w http.ResponseWriter, r *http.Request){
     defer serv.Recover(w)
     
-    path, slugs := serv.Get_path_slugs("", r)
+    path, slugs := serv.Get_path_slugs(r, "")
     fmt.Println("path:", path)
     fmt.Println("slugs:", slugs)
     
@@ -53,7 +53,7 @@ func main(){
 h.Route(serv.ALL, "/", 60, func(w http.ResponseWriter, r *http.Request){
   defer serv.Recover(w)
   
-  path, slugs := serv.Get_path_slugs("", r)
+  path, slugs := serv.Get_path_slugs(r, "")
   fmt.Println("path:", path)
   fmt.Println("slugs:", slugs)
   
