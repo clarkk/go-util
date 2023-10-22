@@ -45,8 +45,23 @@ func Get(ctx context.Context, key string) (string, bool) {
 	return value, found
 }
 
+func Hgetall(ctx context.Context, key string) (map[string]string, bool) {
+	res, err := client.HGetAll(ctx, key).Result()
+	if err != nil && err != redis.Nil {
+		panic(err)
+	}
+	found := err != redis.Nil
+	return res, found
+}
+
 func Set(ctx context.Context, key string, value []byte, expires int) error {
 	return client.Set(ctx, key, value, time.Duration(expires) * time.Second).Err()
+}
+
+func Hset(ctx context.Context, key string, values interface{}, expires int) error {
+	err := client.HSet(ctx, key, values).Err()
+	client.Expire(ctx, key, time.Duration(expires) * time.Second)
+	return err
 }
 
 func Delete(ctx context.Context, key string) error {
