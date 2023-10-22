@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	Bits4096 	= 4096
+	BITS4096 	= 4096
 )
 
 func Generate_RSA(bits int) ([]byte, []byte){

@@ -8,12 +8,12 @@ import (
 )
 
 const (
-	Gray 		= "1;30"
-	Green 		= "0;32"
-	Blue 		= "0;36"
-	Yellow		= "1;33"
-	Red 		= "0;31"
-	Purple		= "0;35"
+	GRAY 		= "1;30"
+	GREEN 		= "0;32"
+	BLUE 		= "0;36"
+	YELLOW		= "1;33"
+	RED 		= "0;31"
+	PURPLE		= "0;35"
 )
 
 var (

@@ -13,12 +13,12 @@ import (
 )
 
 const (
-	default_cookie_name 	= "session_token"
-	default_remote_hash 	= "GOREDIS_SESS:%s"
-	default_expires 		= 60 * 20
-	default_purge_interval 	= 5 * time.Minute
+	DEFAULT_COOKIE_NAME 	= "session_token"
+	DEFAULT_REMOTE_HASH 	= "GOREDIS_SESS:%s"
+	DEFAULT_EXPIRES 		= 60 * 20
+	DEFAULT_PURGE_INTERVAL 	= 5 * time.Minute
 	
-	ctx_session 			ctx_key = ""
+	CTX_SESSION 			ctx_key = ""
 )
 
 var (
@@ -68,10 +68,10 @@ func Use_expires(secs int) Option {
 func Init(opts ...Option){
 	once.Do(func(){
 		cfg = &config{
-			cookie_name:	default_cookie_name,
-			remote_hash:	default_remote_hash,
-			expires:		default_expires,
-			purge_interval:	default_purge_interval,
+			cookie_name:	DEFAULT_COOKIE_NAME,
+			remote_hash:	DEFAULT_REMOTE_HASH,
+			expires:		DEFAULT_EXPIRES,
+			purge_interval:	DEFAULT_PURGE_INTERVAL,
 		}
 		
 		for _, opt := range opts {
@@ -126,7 +126,7 @@ func Start(w http.ResponseWriter, r *http.Request) *session {
 	s.w = w
 	
 	if cfg.context {
-		ctx = context.WithValue(ctx, ctx_session, s)
+		ctx = context.WithValue(ctx, CTX_SESSION, s)
 		r2 := r.WithContext(ctx)
 		*r = *r2
 	}
@@ -140,7 +140,7 @@ func Session(r *http.Request) *session {
 		panic("Session context feature is disabled")
 	}
 	
-	s, ok := r.Context().Value(ctx_session).(*session)
+	s, ok := r.Context().Value(CTX_SESSION).(*session)
 	if !ok {
 		return nil
 	}

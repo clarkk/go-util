@@ -21,7 +21,7 @@ const (
 	POST 		= "POST"
 	DELETE 		= "DELETE"
 	
-	ctx_http 	ctx_key = ""
+	CTX_HTTP 	ctx_key = ""
 )
 
 type (
@@ -63,7 +63,7 @@ func Recover(w http.ResponseWriter){
 }
 
 func Get_pattern_slug(r *http.Request, index int) string {
-	fields := r.Context().Value(ctx_http).([]string)
+	fields := r.Context().Value(CTX_HTTP).([]string)
 	return fields[index]
 }
 
@@ -136,7 +136,7 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request) {
 				
 				//	Slug group capture
 				if len > 1 {
-					ctx = context.WithValue(ctx, ctx_http, matches[1:])
+					ctx = context.WithValue(ctx, CTX_HTTP, matches[1:])
 				}
 				
 				match_route = route
