@@ -99,8 +99,6 @@ func (h *HTTP) Route_regex(method string, pattern string, timeout int, handler h
 }
 
 func (h *HTTP) Run(){
-	//h.routes = routes_sort(h.routes)
-	
 	for _, route := range h.routes {
 		cutil.Out(fmt.Sprintf("Route: %s", route.pattern))
 	}
@@ -183,13 +181,13 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request) {
 		if has_timeout {
 			var cancel context.CancelFunc
 			ctx, cancel = context.WithTimeout(ctx, time.Duration(time.Duration(match_route.timeout) * time.Second))
-			defer cancel()
 			
 			go func(){
 				match_route.handler(w, r.WithContext(ctx))
 				cancel()
 			}()
 			
+			//	Wait until the context is done/canceled
 			select {
 			case <-ctx.Done():
 				if ctx.Err() == context.DeadlineExceeded {
@@ -203,7 +201,7 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	//	No pattern match
+	//	No pattern matched
 	if len(allow) > 0 {
 		w.Header().Set("Allow", strings.Join(allow, ", "))
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -230,66 +228,6 @@ func (h *HTTP) used_port_pid() (string, string){
 	}
 	return "", ""
 }
-
-/*func routes_sort(http_routes routes) routes {
-	list 		:= map[string]*route{}
-	list_regex 	:= map[string]*route{}
-	unique 		:= map[string]bool{}
-	
-	var default_route *route
-	
-	for _, route := range http_routes {
-		if route.pattern == "/" {
-			default_route = route
-			continue
-		}
-		
-		//	Check if pattern starts with "/"
-		if !strings.HasPrefix(route.pattern, "/") {
-			log.Fatalf("Route does not start with '/': %s", route.pattern)
-		}
-		
-		//	Check for route duplicates
-		if _, ok := unique[route.pattern]; ok {
-			log.Fatalf("Duplicate route: %s", route.pattern)
-		}
-		unique[route.pattern] = true
-		
-		if route.regex != nil {
-			list_regex[route.pattern] = route
-		}else{
-			list[route.pattern] = route
-		}
-	}
-	
-	//	Order routes
-	keys := make([]string, 0, len(list))
-	for key := range list {
-		keys = append(keys, key)
-	}
-	sort.Slice(keys, func(i, j int) bool {
-		return keys[i] < keys[j]
-	})
-	
-	http_routes_sort := make(routes, 0, len(http_routes))
-	
-	//	Apply routes
-	for _, key := range keys {
-		http_routes_sort = append(http_routes_sort, list[key])
-	}
-	
-	//	Apply regex routes
-	for _, route := range list_regex {
-		http_routes_sort = append(http_routes_sort, route)
-	}
-	
-	//	Apply default route
-	if default_route != nil {
-		http_routes_sort = append(http_routes_sort, default_route)
-	}
-	
-	return http_routes_sort
-}*/
 
 func parse_host() (string, string) {
 	ex, err := os.Executable()
