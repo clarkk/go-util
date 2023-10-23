@@ -6,7 +6,6 @@ import (
 	"os"
 	"time"
 	"strings"
-	"sort"
 	"regexp"
 	"context"
 	"runtime"
