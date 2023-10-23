@@ -33,6 +33,7 @@ type (
 		
 		sld 		string
 		tld 		string
+		
 		test 		bool
 		
 		routes 		routes
@@ -52,11 +53,11 @@ type (
 func NewHTTP(host string, port int) *HTTP {
 	sld, tld := parse_host()
 	return &HTTP{
-		host:	host,
-		port:	port,
-		sld:	sld,
-		tld:	tld,
-		routes:	routes{},
+		host:		host,
+		port:		port,
+		sld:		sld,
+		tld:		tld,
+		routes:		routes{},
 	}
 }
 
@@ -98,6 +99,12 @@ func (h *HTTP) Route_regex(method string, pattern string, timeout int, handler h
 }
 
 func (h *HTTP) Run(){
+	//h.routes = routes_sort(h.routes)
+	
+	for _, route := range h.routes {
+		cutil.Out(fmt.Sprintf("Route: %s", route.pattern))
+	}
+	
 	cutil.Out(fmt.Sprintf("Listening on: %s:%d, SLD: %s, TLD: %s (pid: %d, GOMAXPROCS: %d) running as '%s'",
 		h.host,
 		h.port,
@@ -189,29 +196,31 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request) {
 					http.Error(w, "Timeout", http.StatusRequestTimeout)
 				}
 			}
-		}else{
-			match_route.handler(w, r.WithContext(ctx))
+			return
 		}
+		
+		match_route.handler(w, r.WithContext(ctx))
+		return
+	}
+	
+	//	No pattern match
+	if len(allow) > 0 {
+		w.Header().Set("Allow", strings.Join(allow, ", "))
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}else{
-		//	No pattern match
-		if len(allow) > 0 {
-			w.Header().Set("Allow", strings.Join(allow, ", "))
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}else{
-			http.Error(w, "Not found", http.StatusNotFound)
-		}
+		http.Error(w, "Not found", http.StatusNotFound)
 	}
 }
 
 func (h *HTTP) used_port_pid() (string, string){
-	c := &cutil.Command{}
+	c := cutil.Command{}
 	c.Run(fmt.Sprintf("netstat -nlp | grep :%d", h.port))
 	if !c.Empty(){
 		fields := c.Output_fields()[0]
 		field := fields[len(fields)-1]
 		pid, name, _ := strings.Cut(field, "/")
 		
-		c = &cutil.Command{}
+		c = cutil.Command{}
 		c.Run(fmt.Sprintf("ps -p %s -o comm=", pid))
 		if !c.Empty(){
 			name = c.Output_lines()[0]
@@ -221,6 +230,66 @@ func (h *HTTP) used_port_pid() (string, string){
 	}
 	return "", ""
 }
+
+/*func routes_sort(http_routes routes) routes {
+	list 		:= map[string]*route{}
+	list_regex 	:= map[string]*route{}
+	unique 		:= map[string]bool{}
+	
+	var default_route *route
+	
+	for _, route := range http_routes {
+		if route.pattern == "/" {
+			default_route = route
+			continue
+		}
+		
+		//	Check if pattern starts with "/"
+		if !strings.HasPrefix(route.pattern, "/") {
+			log.Fatalf("Route does not start with '/': %s", route.pattern)
+		}
+		
+		//	Check for route duplicates
+		if _, ok := unique[route.pattern]; ok {
+			log.Fatalf("Duplicate route: %s", route.pattern)
+		}
+		unique[route.pattern] = true
+		
+		if route.regex != nil {
+			list_regex[route.pattern] = route
+		}else{
+			list[route.pattern] = route
+		}
+	}
+	
+	//	Order routes
+	keys := make([]string, 0, len(list))
+	for key := range list {
+		keys = append(keys, key)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i] < keys[j]
+	})
+	
+	http_routes_sort := make(routes, 0, len(http_routes))
+	
+	//	Apply routes
+	for _, key := range keys {
+		http_routes_sort = append(http_routes_sort, list[key])
+	}
+	
+	//	Apply regex routes
+	for _, route := range list_regex {
+		http_routes_sort = append(http_routes_sort, route)
+	}
+	
+	//	Apply default route
+	if default_route != nil {
+		http_routes_sort = append(http_routes_sort, default_route)
+	}
+	
+	return http_routes_sort
+}*/
 
 func parse_host() (string, string) {
 	ex, err := os.Executable()
