@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 	"strings"
+	"sort"
 	"regexp"
 	"context"
 	"runtime"
@@ -31,6 +32,7 @@ type (
 		host 		string
 		port 		int
 		
+		sld 		string
 		tld 		string
 		test 		bool
 		
@@ -39,7 +41,7 @@ type (
 	
 	route struct {
 		method 		string
-		path 		string
+		pattern 	string
 		regex 		*regexp.Regexp
 		timeout 	int
 		handler		http.HandlerFunc
@@ -49,10 +51,12 @@ type (
 )
 
 func NewHTTP(host string, port int) *HTTP {
+	sld, tld := parse_host()
 	return &HTTP{
 		host:	host,
 		port:	port,
-		tld:	get_tld(),
+		sld:	sld,
+		tld:	tld,
 		routes:	routes{},
 	}
 }
@@ -79,7 +83,7 @@ func (h *HTTP) Route(method string, pattern string, timeout int, handler http.Ha
 		method,
 		pattern,
 		nil,
-		timeout,
+		timeout_min(timeout),
 		handler,
 	})
 }
@@ -87,15 +91,23 @@ func (h *HTTP) Route(method string, pattern string, timeout int, handler http.Ha
 func (h *HTTP) Route_regex(method string, pattern string, timeout int, handler http.HandlerFunc){
 	h.routes = append(h.routes, &route{
 		method,
-		"",
+		pattern,
 		regexp.MustCompile("^"+pattern),
-		timeout,
+		timeout_min(timeout),
 		handler,
 	})
 }
 
 func (h *HTTP) Run(){
-	cutil.Out(fmt.Sprintf("Listening on: %s:%d, %s (pid: %d, GOMAXPROCS: %d) running as '%s'", h.host, h.port, h.tld, os.Getpid(), runtime.GOMAXPROCS(0), cutil.Get_user().Username))
+	cutil.Out(fmt.Sprintf("Listening on: %s:%d, SLD: %s, TLD: %s (pid: %d, GOMAXPROCS: %d) running as '%s'",
+		h.host,
+		h.port,
+		h.sld,
+		h.tld,
+		os.Getpid(),
+		runtime.GOMAXPROCS(0),
+		cutil.Get_user().Username,
+	))
 	
 	srv := &http.Server{
 		Addr:				fmt.Sprintf("%s:%d", h.host, h.port),
@@ -113,7 +125,7 @@ func (h *HTTP) Run(){
 			log.Fatalf("Port %d is already in use by PID %s %s", h.port, pid, name)
 		}
 		
-		log.Fatal("HTTP server: "+err.Error())
+		log.Fatalf("HTTP server: %s", err)
 	}
 }
 
@@ -146,7 +158,7 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request) {
 			}
 		}else{
 			//	Path
-			if strings.HasPrefix(r.URL.Path, route.path) {
+			if strings.HasPrefix(r.URL.Path, route.pattern) {
 				if route.method != ALL && r.Method != route.method {
 					allow = append(allow, route.method)
 					continue
@@ -159,21 +171,27 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	if match_route != nil {
+		has_timeout := match_route.timeout > 0
+		
 		//	Apply timeout context
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, time.Duration(time.Duration(match_route.timeout) * time.Second))
-		defer cancel()
-		
-		go func(){
-			match_route.handler(w, r.WithContext(ctx))
-			cancel()
-		}()
-		
-		select {
-		case <-ctx.Done():
-			if ctx.Err() == context.DeadlineExceeded {
-				http.Error(w, "Timeout", http.StatusRequestTimeout)
+		if has_timeout {
+			var cancel context.CancelFunc
+			ctx, cancel = context.WithTimeout(ctx, time.Duration(time.Duration(match_route.timeout) * time.Second))
+			defer cancel()
+			
+			go func(){
+				match_route.handler(w, r.WithContext(ctx))
+				cancel()
+			}()
+			
+			select {
+			case <-ctx.Done():
+				if ctx.Err() == context.DeadlineExceeded {
+					http.Error(w, "Timeout", http.StatusRequestTimeout)
+				}
 			}
+		}else{
+			match_route.handler(w, r.WithContext(ctx))
 		}
 	}else{
 		//	No pattern match
@@ -205,7 +223,7 @@ func (h *HTTP) used_port_pid() (string, string){
 	return "", ""
 }
 
-func get_tld() string{
+func parse_host() (string, string) {
 	ex, err := os.Executable()
 	if err != nil {
 		panic(err)
@@ -214,6 +232,18 @@ func get_tld() string{
 	path = path[:len(path)-1]
 	slug := path[len(path)-1]
 	host := strings.Split(slug, ".")
-	host = host[len(host)-2:]
-	return strings.Join(host[:], ".")
+	parts := len(host)
+	if parts <= 2 {
+		return "", host[0]
+	}
+	sld := host[:parts-2]
+	tld := host[parts-2:]
+	return strings.Join(sld[:], "."), strings.Join(tld[:], ".")
+}
+
+func timeout_min(timeout int) int {
+	if timeout < 0 {
+		return 0
+	}
+	return timeout
 }
