@@ -25,6 +25,8 @@ const (
 )
 
 type (
+	routes []*route
+	
 	HTTP struct {
 		host 		string
 		port 		int
@@ -32,7 +34,7 @@ type (
 		tld 		string
 		test 		bool
 		
-		routes 		[]*route
+		routes 		routes
 	}
 	
 	route struct {
@@ -51,7 +53,7 @@ func NewHTTP(host string, port int) *HTTP {
 		host:	host,
 		port:	port,
 		tld:	get_tld(),
-		routes:	[]*route{},
+		routes:	routes{},
 	}
 }
 
