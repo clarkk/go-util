@@ -31,7 +31,6 @@ type (
 	Option 				func(*config)
 	
 	config struct {
-		context 		bool
 		cookie_name 	string
 		remote_hash 	string
 		expires 		int
@@ -51,13 +50,6 @@ type (
 	
 	ctx_key 			string
 )
-
-//	Enable fetching session from *http.Request context
-func Use_context() Option {
-	return func(o *config){
-		o.context = true
-	}
-}
 
 func Use_expires(secs int) Option {
 	return func(o *config){
@@ -125,21 +117,15 @@ func Start(w http.ResponseWriter, r *http.Request) *session {
 	
 	s.w = w
 	
-	if cfg.context {
-		ctx = context.WithValue(ctx, CTX_SESSION, s)
-		r2 := r.WithContext(ctx)
-		*r = *r2
-	}
+	ctx = context.WithValue(ctx, CTX_SESSION, s)
+	r2 := r.WithContext(ctx)
+	*r = *r2
 	
 	return s
 }
 
 //	Fetch session from request context
 func Session(r *http.Request) *session {
-	if !cfg.context {
-		panic("Session context feature is disabled")
-	}
-	
 	s, ok := r.Context().Value(CTX_SESSION).(*session)
 	if !ok {
 		return nil

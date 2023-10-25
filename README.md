@@ -190,12 +190,7 @@ h.Route(serv.ALL, "/", func(w http.ResponseWriter, r *http.Request){
 ```
 
 ## Get session from `r *http.Request` context
-This feature has to be enabled
 ```
-sess.Init(
-  sess.Use_context()
-)
-
 s := sess.Session(r)
 data = s.Get()
 ```
