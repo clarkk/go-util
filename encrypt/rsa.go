@@ -18,7 +18,7 @@ func Generate_RSA(bits int) ([]byte, []byte){
 	//	Generate private key
 	key, err := rsa.GenerateKey(rand.Reader, bits)
 	if err != nil {
-		panic(err)
+		panic("Generate RSA keys: "+err.Error())
 	}
 	
 	//	Encode private key to PKCS#1 PEM
@@ -50,7 +50,7 @@ func Encrypt_public(msg string, public []byte) []byte{
 	var label []byte
 	ciphertext, err := rsa.EncryptOAEP(sha512.New(), rand.Reader, decode_public_pem(public), []byte(msg), label)
 	if err != nil {
-		panic(err)
+		panic("Encrypt public: "+err.Error())
 	}
 	return ciphertext
 }
@@ -63,7 +63,7 @@ func Decrypt_private(ciphertext []byte, private []byte) string{
 	var label []byte
 	text, err := rsa.DecryptOAEP(sha512.New(), rand.Reader, decode_private_pem(private), ciphertext, label)
 	if err != nil {
-		panic(err)
+		panic("Decrypt private: "+err.Error())
 	}
 	return string(text)
 }
@@ -76,7 +76,7 @@ func Decrypt_private_base64(ciphertext string, private []byte) string{
 func Sign(msg string, private []byte) []byte{
 	signature, err := rsa.SignPKCS1v15(rand.Reader, decode_private_pem(private), crypto.SHA512, digest(msg))
 	if err != nil {
-		panic(err)
+		panic("Sign message: "+err.Error())
 	}
 	return signature
 }

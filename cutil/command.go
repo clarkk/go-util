@@ -20,7 +20,7 @@ func (c *Command) Run(command string){
 	err := cmd.Run()
 	if err != nil {
 		//fmt.Println(err.Error()+": "+c.err.String())
-		panic(err)
+		panic("Command "+command+": "+err.Error())
 	}
 }
 

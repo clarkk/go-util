@@ -12,6 +12,6 @@ var (
 func Chmod_write_owner(path string){
 	err := os.Chmod(path, CHMOD_WR_OWNER)
 	if err != nil {
-		panic(err)
+		panic("CHMOD write owner: "+err.Error())
 	}
 }

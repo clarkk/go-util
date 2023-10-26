@@ -26,7 +26,7 @@ func Connect(auth string){
 		DB:			0,
 	})
 	if _, err := client.Ping(context.Background()).Result(); err != nil {
-		panic(err)
+		panic("Could not to Redis: "+err.Error())
 	}
 	
 	connected = true
@@ -39,7 +39,7 @@ func Connected() bool {
 func Get(ctx context.Context, key string) (string, bool) {
 	value, err := client.Get(ctx, key).Result()
 	if err != nil && err != redis.Nil {
-		panic(err)
+		panic("Redis get: "+err.Error())
 	}
 	found := err != redis.Nil
 	return value, found
@@ -49,12 +49,12 @@ func Hgetall(ctx context.Context, key string, ref interface{}) bool {
 	res := client.HGetAll(ctx, key)
 	err := res.Err()
 	if err != nil && err != redis.Nil {
-		panic(err)
+		panic("Redis hgetall: "+err.Error())
 	}
 	found := err != redis.Nil
 	if found {
 		if err := res.Scan(ref); err != nil {
-			panic(err)
+			panic("Redis hgetall scan: "+err.Error())
 		}
 	}
 	return found

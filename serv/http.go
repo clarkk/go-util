@@ -232,7 +232,7 @@ func (h *HTTP) used_port_pid() (string, string){
 func parse_host() (string, string) {
 	ex, err := os.Executable()
 	if err != nil {
-		panic(err)
+		panic("HTTP parse host: "+err.Error())
 	}
 	path := strings.Split(filepath.Dir(ex), "/")
 	path = path[:len(path)-1]

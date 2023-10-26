@@ -213,7 +213,7 @@ func fetch_session(ctx context.Context, sid string) *session {
 		s := new(sid)
 		err := json.Unmarshal([]byte(remote), &s.data)
 		if err != nil {
-			panic(err)
+			panic("Session remote fetch JSON decode: "+err.Error())
 		}
 		return s
 	}
@@ -235,17 +235,17 @@ func new(sid string) *session {
 func update_remote_session(ctx context.Context, s *session){
 	json_bytes, err_json := json.Marshal(s.data)
 	if err_json != nil {
-		panic(err_json)
+		panic("Session remote update JSON encode: "+err_json.Error())
 	}
 	
 	if err := rdb.Set(ctx, fmt.Sprintf(cfg.remote_hash, s.sid), json_bytes, cfg.expires); err != nil {
-		panic(err)
+		panic("Session remote update: "+err.Error())
 	}
 }
 
 func delete_remote_session(ctx context.Context, sid string){
 	if err := rdb.Delete(ctx, sid_hash(sid)); err != nil {
-		panic(err)
+		panic("Session remote delete: "+err.Error())
 	}
 }
 
