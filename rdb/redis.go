@@ -38,26 +38,21 @@ func Connected() bool {
 
 func Get(ctx context.Context, key string) (string, bool) {
 	value, err := client.Get(ctx, key).Result()
-	if err != nil && err != redis.Nil {
+	empty := err == redis.Nil
+	if err != nil && !empty {
 		panic("Redis get: "+err.Error())
 	}
-	found := err != redis.Nil
-	return value, found
+	return value, !empty
 }
 
-func Hgetall(ctx context.Context, key string, ref interface{}) bool {
+func Hgetall(ctx context.Context, key string, ref interface{}){
 	res := client.HGetAll(ctx, key)
-	err := res.Err()
-	if err != nil && err != redis.Nil {
+	if err := res.Err(); err != nil {
 		panic("Redis hgetall: "+err.Error())
 	}
-	found := err != redis.Nil
-	if found {
-		if err := res.Scan(ref); err != nil {
-			panic("Redis hgetall scan: "+err.Error())
-		}
+	if err := res.Scan(ref); err != nil {
+		panic("Redis hgetall scan: "+err.Error())
 	}
-	return found
 }
 
 func Set(ctx context.Context, key string, value []byte, expires int) error {
