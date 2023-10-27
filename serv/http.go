@@ -51,6 +51,8 @@ type (
 )
 
 func NewHTTP(host string, port int) *HTTP {
+	cutil.Out("Starting server")
+	
 	sld, tld := parse_host()
 	return &HTTP{
 		host:		host,
@@ -99,10 +101,10 @@ func (h *HTTP) Route_regex(method string, pattern string, timeout int, handler h
 }
 
 func (h *HTTP) Run(){
+	cutil.Out(fmt.Sprintf("Routes defined: %d", len(h.routes)))
 	for _, route := range h.routes {
-		cutil.Out(fmt.Sprintf("Route: %s", route.pattern))
+		cutil.Out(route.pattern)
 	}
-	
 	cutil.Out(fmt.Sprintf("Listening on: %s:%d, SLD: %s, TLD: %s (pid: %d, GOMAXPROCS: %d) running as '%s'",
 		h.host,
 		h.port,
