@@ -185,6 +185,7 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request) {
 			ctx, cancel = context.WithTimeout(ctx, time.Duration(time.Duration(match_route.timeout) * time.Second))
 			
 			go func(){
+				//	Process HTTP request
 				match_route.handler(w, r.WithContext(ctx))
 				cancel()
 			}()
@@ -199,6 +200,7 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		
+		//	Process HTTP request
 		match_route.handler(w, r.WithContext(ctx))
 		return
 	}
