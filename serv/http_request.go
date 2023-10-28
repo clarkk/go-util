@@ -26,6 +26,7 @@ func Get_path_slugs(r *http.Request, base string) (string, []string){
 	return path, strings.Split(strings.TrimLeft(path[len(base):], "/"), "/")
 }
 
+//	Check if POST body exceeds limit
 func Post_limit(w http.ResponseWriter, r *http.Request, limit_kb int64) ([]byte, error){
 	r.Body = http.MaxBytesReader(w, r.Body, limit_kb)
 	body_bytes, err := io.ReadAll(r.Body)

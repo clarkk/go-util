@@ -25,7 +25,7 @@ const (
 )
 
 type (
-	routes []*route
+	routes 			[]*route
 	
 	HTTP struct {
 		host 		string
@@ -53,7 +53,7 @@ type (
 func NewHTTP(host string, port int) *HTTP {
 	cutil.Out("Starting server")
 	
-	sld, tld := parse_host()
+	sld, tld := parse_directory_host()
 	return &HTTP{
 		host:		host,
 		port:		port,
@@ -80,6 +80,7 @@ func (h *HTTP) Test(){
 	h.test = true
 }
 
+//	Apply route pattern
 func (h *HTTP) Route(method string, pattern string, timeout int, handler http.HandlerFunc){
 	h.routes = append(h.routes, &route{
 		method,
@@ -90,6 +91,7 @@ func (h *HTTP) Route(method string, pattern string, timeout int, handler http.Ha
 	})
 }
 
+//	Apply regex route pattern
 func (h *HTTP) Route_regex(method string, pattern string, timeout int, handler http.HandlerFunc){
 	h.routes = append(h.routes, &route{
 		method,
@@ -100,6 +102,7 @@ func (h *HTTP) Route_regex(method string, pattern string, timeout int, handler h
 	})
 }
 
+//	Start server
 func (h *HTTP) Run(){
 	cutil.Out(fmt.Sprintf("Routes defined: %d", len(h.routes)))
 	for _, route := range h.routes {
@@ -135,6 +138,7 @@ func (h *HTTP) Run(){
 	}
 }
 
+//	Route pattern handler
 func (h *HTTP) serve(w http.ResponseWriter, r *http.Request) {
 	var (
 		match_route 	*route
@@ -185,35 +189,37 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request) {
 			ctx, cancel = context.WithTimeout(ctx, time.Duration(time.Duration(match_route.timeout) * time.Second))
 			
 			go func(){
-				//	Process HTTP request
+				//	Serve HTTP request to client
 				match_route.handler(w, r.WithContext(ctx))
 				cancel()
 			}()
 			
-			//	Wait until the context is done/canceled
+			//	Wait until the context is done/canceled/timeout
 			select {
 			case <-ctx.Done():
+				//	Return HTTP 408 Timeout if request reached timeout
 				if ctx.Err() == context.DeadlineExceeded {
-					http.Error(w, "Timeout", http.StatusRequestTimeout)
+					http.Error(w, http.StatusText(http.StatusRequestTimeout), http.StatusRequestTimeout)
 				}
 			}
 			return
 		}
 		
-		//	Process HTTP request
+		//	Serve HTTP request to client
 		match_route.handler(w, r.WithContext(ctx))
 		return
 	}
 	
-	//	No pattern matched
+	//	Return HTTP 404/405 if no route was matched
 	if len(allow) > 0 {
 		w.Header().Set("Allow", strings.Join(allow, ", "))
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 	}else{
-		http.Error(w, "Not found", http.StatusNotFound)
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 	}
 }
 
+//	If HTTP server fails to start check which PID is occupying the port
 func (h *HTTP) used_port_pid() (string, string){
 	c := cutil.Command{}
 	c.Run(fmt.Sprintf("netstat -nlp | grep :%d", h.port))
@@ -233,7 +239,8 @@ func (h *HTTP) used_port_pid() (string, string){
 	return "", ""
 }
 
-func parse_host() (string, string) {
+//	Parse the parent directory name of the go project directory
+func parse_directory_host() (string, string) {
 	ex, err := os.Executable()
 	if err != nil {
 		panic("HTTP parse host: "+err.Error())
