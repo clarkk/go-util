@@ -3,8 +3,8 @@
 
 # go-util/serv
 Lightweight HTTP server
-- With regex pattern in route
-- Bind HTTP methods to route
+- With regex pattern in routes
+- Bind HTTP method(s) to routes
 - Set individual timeout on each route (with `context.WithTimeout()` on request handler)
 
 ### Example
@@ -26,14 +26,14 @@ func init(){
 func main(){
   h := serv.NewHTTP("127.0.0.1", 3000)
   
-  //  Accept only GET methods
+  //  Accepts only GET methods (with 60 seconds timeout)
   h.Route(serv.GET, "/get", 60, func(w http.ResponseWriter, r *http.Request){
     defer serv.Recover(w)
     
     io.WriteString(w, "This only accepts GET methods")
   })
   
-  //  Accept all methods: GET, POST, DELETE etc.
+  //  Accepts all methods: GET, POST, DELETE etc. (with 60 seconds timeout)
   h.Route(serv.ALL, "/", 60, func(w http.ResponseWriter, r *http.Request){
     defer serv.Recover(w)
     
@@ -48,7 +48,7 @@ func main(){
 }
 ```
 
-## Accept all HTTP methods (GET, POST, DELETE, etc.) with 60 second timeout
+## Accepts all HTTP methods (GET, POST, DELETE, etc.) with 60 second timeout
 ```
 h.Route(serv.ALL, "/", 60, func(w http.ResponseWriter, r *http.Request){
   defer serv.Recover(w)
@@ -61,7 +61,7 @@ h.Route(serv.ALL, "/", 60, func(w http.ResponseWriter, r *http.Request){
 })
 ```
 
-## Accept only HTTP POST with 120 second timeout
+## Accepts only HTTP POST with 120 second timeout
 ```
 h.Route(serv.POST, "/post", 120, func(w http.ResponseWriter, r *http.Request){
   defer serv.Recover(w)
@@ -70,8 +70,8 @@ h.Route(serv.POST, "/post", 120, func(w http.ResponseWriter, r *http.Request){
 })
 ```
 
-## Regex pattern with 60 second timeout
-All routes will automatically be prefixed with a `^` starting anchor and regex precompiled
+## Regex route pattern with 60 second timeout
+All regex routes will automatically be precompiled and prefixed with a `^` starting anchor
 
 `/base_path/([^/]+)` is compiled as `^/base_path/([^/]+)`
 ```
@@ -104,7 +104,7 @@ rdb.Connect(REDIS_AUTH)
 //  Initiate session pool and maintenance tasks
 sess.Init()
 
-h.Route(serv.ALL, "/", func(w http.ResponseWriter, r *http.Request){
+h.Route(serv.ALL, "/", 60, func(w http.ResponseWriter, r *http.Request){
   defer serv.Recover(w)
   
   //  Start session (with read-lock)
