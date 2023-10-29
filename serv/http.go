@@ -142,7 +142,7 @@ func (h *HTTP) Run(){
 }
 
 //	Route pattern handler
-func (h *HTTP) serve(w http.ResponseWriter, r *http.Request) {
+func (h *HTTP) serve(w http.ResponseWriter, r *http.Request){
 	var (
 		match_route 	*route
 		allow 			[]string
