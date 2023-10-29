@@ -21,6 +21,9 @@ const (
 	POST 		= "POST"
 	DELETE 		= "DELETE"
 	
+	RE_SLUG 	= `([^/]+)`
+	RE_FILE 	= `([^/]+\.[^/]+)$`
+	
 	CTX_HTTP 	ctx_key = ""
 )
 
