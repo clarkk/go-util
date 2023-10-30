@@ -8,6 +8,8 @@ Lightweight HTTP server
 - Set individual timeout on each route (with `context.WithTimeout()` on request handler)
 - Supports customizable build adapters/middleware
 
+All incoming HTTP requests will have trailing slashes stripped: `/foo/bar/` => `/foo/bar`
+
 ### Example
 ```
 package main
@@ -75,6 +77,9 @@ h.Route(serv.POST, "/post", 120, func(w http.ResponseWriter, r *http.Request){
 All regex routes will automatically be pre-compiled and prefixed with a `^` starting anchor
 
 `/base_path/([^/]+)` is compiled as `^/base_path/([^/]+)`
+
+**Tip!**
+Use `serv.RE_SLUG` as placeholder for `([^/]+)` => `"/base_path/"+serv.RE_SLUG+"/test/"+serv.RE_SLUG`
 ```
 h.Route_regex(serv.ALL, "/base_path/([^/]+)/test/([^/]+)", 60, func(w http.ResponseWriter, r *http.Request){
   defer serv.Recover(w)
@@ -85,9 +90,6 @@ h.Route_regex(serv.ALL, "/base_path/([^/]+)/test/([^/]+)", 60, func(w http.Respo
   io.WriteString(w, "regex path slug names: "+slug1+" "+slug2)
 })
 ```
-
-**Tip**
-Use `serv.RE_SLUG` as placeholder for `([^/]+)`: `"/base_path/"+serv.RE_SLUG+"/test/"+serv.RE_SLUG`
 
 ## Build custom adapters/middleware
 ```

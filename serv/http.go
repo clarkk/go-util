@@ -28,8 +28,6 @@ const (
 )
 
 type (
-	routes 			[]*route
-	
 	HTTP struct {
 		host 		string
 		port 		int
@@ -41,6 +39,8 @@ type (
 		
 		routes 		routes
 	}
+	
+	routes 			[]*route
 	
 	route struct {
 		method 		string
@@ -87,7 +87,7 @@ func (h *HTTP) Test(){
 func (h *HTTP) Route(method string, pattern string, timeout int, handler http.HandlerFunc){
 	h.routes = append(h.routes, &route{
 		method,
-		strip_trailing_slash(pattern),
+		pattern,
 		nil,
 		timeout_min(timeout),
 		handler,
@@ -98,7 +98,7 @@ func (h *HTTP) Route(method string, pattern string, timeout int, handler http.Ha
 func (h *HTTP) Route_regex(method string, pattern string, timeout int, handler http.HandlerFunc){
 	h.routes = append(h.routes, &route{
 		method,
-		strip_trailing_slash(pattern),
+		pattern,
 		regexp.MustCompile("^"+pattern),
 		timeout_min(timeout),
 		handler,
