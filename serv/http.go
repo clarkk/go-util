@@ -87,7 +87,7 @@ func (h *HTTP) Test(){
 func (h *HTTP) Route(method string, pattern string, timeout int, handler http.HandlerFunc){
 	h.routes = append(h.routes, &route{
 		method,
-		pattern,
+		strip_trailing_slash(pattern),
 		nil,
 		timeout_min(timeout),
 		handler,
@@ -98,7 +98,7 @@ func (h *HTTP) Route(method string, pattern string, timeout int, handler http.Ha
 func (h *HTTP) Route_regex(method string, pattern string, timeout int, handler http.HandlerFunc){
 	h.routes = append(h.routes, &route{
 		method,
-		pattern,
+		strip_trailing_slash(pattern),
 		regexp.MustCompile("^"+pattern),
 		timeout_min(timeout),
 		handler,
@@ -150,10 +150,13 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request){
 	
 	ctx := r.Context()
 	
+	//	Strip trailing slashes from URL
+	path := strip_trailing_slash(r.URL.Path)
+	
 	for _, route := range h.routes {
 		if route.regex != nil {
 			//	Regex path
-			matches := route.regex.FindStringSubmatch(r.URL.Path)
+			matches := route.regex.FindStringSubmatch(path)
 			len 	:= len(matches)
 			if len > 0 {
 				if route.method != ALL && r.Method != route.method {
@@ -171,7 +174,7 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request){
 			}
 		}else{
 			//	Path
-			if strings.HasPrefix(r.URL.Path, route.pattern) {
+			if strings.HasPrefix(path, route.pattern) {
 				if route.method != ALL && r.Method != route.method {
 					allow = append(allow, route.method)
 					continue
@@ -266,4 +269,8 @@ func timeout_min(timeout int) int {
 		return 0
 	}
 	return timeout
+}
+
+func strip_trailing_slash(url string) string {
+	return strings.TrimRight(url, "/")
 }
