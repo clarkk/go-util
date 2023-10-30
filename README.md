@@ -95,13 +95,14 @@ func adapt_tx() serv.Adapter {
   return func(h http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
       //  Begin a new DB transaction
-      tx := db.Begin(r.Context())
+      tx := dbd.Begin(r.Context())
       defer tx.Rollback()
       
       //  Do other stuff here BEFORE the request is served
       
-      //  Apply it to the request context (out of this scope)
-      r = db.Apply(r, tx)
+      //  Apply it to the request context
+      //  https://github.com/clarkk/go-dbd
+      r = dbd.Apply(r, tx)
       
       //  Serve the request (call next adapter)
       h.ServeHTTP(w, r)
@@ -113,8 +114,9 @@ func adapt_tx() serv.Adapter {
 
 h.Route_regex(serv.GET, "/get/"+serv.RE_SLUG, TIMEOUT, serv.Adapt(
     func(w http.ResponseWriter, r *http.Request){
-      //  Fetch the DB transaction from request context (out of this scope)
-      tx  := db.Applied(r)
+      //  Fetch the DB transaction from request context
+      //  https://github.com/clarkk/go-dbd
+      tx  := dbd.Applied(r)
       
       table := serv.Get_pattern_slug(r, 0)
       
