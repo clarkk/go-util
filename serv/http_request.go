@@ -9,7 +9,7 @@ import (
 	"github.com/go-errors/errors"
 )
 
-var regex_get_query = regexp.MustCompile(`^[\pL_]+$`)
+var regex_get_query = regexp.MustCompile(`^[\pL_][\pL_0-9]+$`)
 
 func Get_client_IP(r *http.Request) string{
 	ip := r.Header.Get("X-Real-Ip")
