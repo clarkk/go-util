@@ -2,9 +2,14 @@ package serv
 
 import (
 	"io"
+	"fmt"
 	"strings"
+	"regexp"
 	"net/http"
+	"github.com/go-errors/errors"
 )
+
+var regex_get_query = regexp.MustCompile(`^[\pL_]+$`)
 
 func Get_client_IP(r *http.Request) string{
 	ip := r.Header.Get("X-Real-Ip")
@@ -34,4 +39,11 @@ func Post_limit(w http.ResponseWriter, r *http.Request, limit_kb int64) ([]byte,
 		return nil, err
 	}
 	return body_bytes, nil
+}
+
+func Valid_query_param(key string) error {
+	if !regex_get_query.MatchString(key) {
+		return errors.New(fmt.Sprintf("Invalid query parameter: %s", key))
+	}
+	return nil
 }
