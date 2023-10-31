@@ -40,8 +40,6 @@ type (
 		routes 		routes
 	}
 	
-	routes 			[]*route
-	
 	route struct {
 		method 		string
 		pattern 	string
@@ -49,6 +47,8 @@ type (
 		timeout 	int
 		handler		http.HandlerFunc
 	}
+	
+	routes 			[]*route
 	
 	ctx_key 		string
 )
