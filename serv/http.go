@@ -4,7 +4,9 @@ import (
 	"log"
 	"fmt"
 	"os"
+	"os/signal"
 	"time"
+	"sync"
 	"strings"
 	"regexp"
 	"context"
@@ -130,15 +132,41 @@ func (h *HTTP) Run(){
 		IdleTimeout:		30 * time.Second,
 	}
 	
-	err := srv.ListenAndServe()
-	if err != nil {
-		pid, name := h.used_port_pid()
-		if pid != "" {
-			log.Fatalf("Port %d is already in use by PID %s %s", h.port, pid, name)
+	wait := &sync.WaitGroup{}
+	wait.Add(1)
+	
+	go func(){
+		defer wait.Done()
+		
+		//	Always returns http.ErrServerClosed on SIGINT
+		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+			//	Server stopped unexpectedly
+			if pid, name := h.used_port_pid(); pid != "" {
+				log.Fatalf("Port %d is already in use by PID %s %s", h.port, pid, name)
+			}
+			log.Fatalf("HTTP server: %s", err)
 		}
 		
-		log.Fatalf("HTTP server: %s", err)
+		cutil.Out("HTTP server stopped serving")
+	}()
+	
+	//	Listening for SIGINT to shutdown gracefully (stop accepting new connections/requests): CTRL+C or "kill -INT $pid"
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	
+	cutil.Out("HTTP server received SIGINT to shutdown gracefully")
+	
+	ctx, cancel := context.WithTimeout(context.Background(), 30 * time.Second)
+	defer cancel()
+	
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("HTTP server shutdown: %s", err)
 	}
+	
+	wait.Wait()
+	
+	cutil.Out("HTTP server shutdown completed")
 }
 
 //	Route pattern handler
@@ -193,6 +221,7 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request){
 		if has_timeout {
 			var cancel context.CancelFunc
 			ctx, cancel = context.WithTimeout(ctx, time.Duration(time.Duration(match_route.timeout) * time.Second))
+			defer cancel()
 			
 			go func(){
 				//	Serve HTTP request to client

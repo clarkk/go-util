@@ -3,12 +3,13 @@
 
 # go-util/serv
 Lightweight HTTP server
+- Shutdown gracefully on SIGINT (CTRL+C or "kill -INT $pid")
 - With regex pattern in routes
-- Bind HTTP method(s) to routes
+- Bind HTTP methods to routes
 - Set individual timeout on each route (with `context.WithTimeout()` on request handler)
 - Supports customizable build adapters/middleware
 
-All incoming HTTP requests will have trailing slashes stripped: `/foo/bar/` => `/foo/bar`
+All incoming HTTP requests will have trailing slashes trimmed before matching with route pattern: `/foo/bar/` => `/foo/bar`
 
 ### Example
 ```
