@@ -45,7 +45,7 @@ func Get(ctx context.Context, key string) (string, bool) {
 	return value, !empty
 }
 
-func Hgetall(ctx context.Context, key string, ref interface{}){
+func Hgetall(ctx context.Context, key string, ref any){
 	res := client.HGetAll(ctx, key)
 	if err := res.Err(); err != nil {
 		panic("Redis hgetall: "+err.Error())
@@ -59,7 +59,7 @@ func Set(ctx context.Context, key string, value []byte, expires int) error {
 	return client.Set(ctx, key, value, time.Duration(expires) * time.Second).Err()
 }
 
-func Hset(ctx context.Context, key string, values interface{}, expires int) error {
+func Hset(ctx context.Context, key string, values any, expires int) error {
 	err := client.HSet(ctx, key, values).Err()
 	client.Expire(ctx, key, time.Duration(expires) * time.Second)
 	return err

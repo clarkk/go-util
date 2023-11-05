@@ -56,7 +56,7 @@ type (
 )
 
 func NewHTTP(host string, port int) *HTTP {
-	cutil.Out("Starting server")
+	cutil.Out("Starting HTTP server")
 	
 	sld, tld := parse_directory_host()
 	return &HTTP{
@@ -166,7 +166,7 @@ func (h *HTTP) Run(){
 	
 	wait.Wait()
 	
-	cutil.Out("HTTP server shutdown completed")
+	cutil.Out("HTTP server shutdown completed successfully")
 }
 
 //	Route pattern handler

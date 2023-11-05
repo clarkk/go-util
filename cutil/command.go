@@ -46,7 +46,7 @@ func (c *Command) Output_fields() [][]string{
 	return fields
 }
 
-func (c *Command) Fscanf(format string, a ...interface{}){
+func (c *Command) Fscanf(format string, a ...any){
 	/*c.Run(fmt.Sprintf("netstat -nlp | grep :%d", *port))
 	var (
 		pid 	string
