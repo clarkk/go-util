@@ -6,7 +6,7 @@ import (
 	"strings"
 	"regexp"
 	"net/http"
-	"github.com/go-errors/errors"
+	//"github.com/go-errors/errors"
 )
 
 var regex_get_query = regexp.MustCompile(`^[\pL_][\pL_0-9]+$`)
@@ -43,7 +43,7 @@ func Post_limit(w http.ResponseWriter, r *http.Request, limit_kb int64) ([]byte,
 
 func Valid_query_param(key string) error {
 	if !regex_get_query.MatchString(key) {
-		return errors.New(fmt.Sprintf("Invalid query parameter: %s", key))
+		return fmt.Errorf("Invalid query parameter: %s", key)
 	}
 	return nil
 }
