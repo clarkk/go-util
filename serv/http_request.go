@@ -50,13 +50,13 @@ func Valid_query_param(key string) error {
 
 func Valid_query_param_single(value []string) (string, bool) {
 	switch len(value) {
-	//	Not set: OK
+	//	Single value (empty): OK
 	case 0:
 		return "", true
-	//	Single key: OK
+	//	Single value: OK
 	case 1:
 		return value[0], true
-	//	Multiple keys: ERROR
+	//	Multiple values: ERROR
 	default:
 		return "", false
 	}

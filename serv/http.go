@@ -11,9 +11,9 @@ import (
 	"regexp"
 	"context"
 	"runtime"
-	"runtime/debug"
 	"path/filepath"
 	"net/http"
+	"github.com/go-errors/errors"
 	"github.com/clarkk/go-util/cutil"
 )
 
@@ -71,7 +71,7 @@ func NewHTTP(host string, port int) *HTTP {
 func Recover(w http.ResponseWriter){
 	if r := recover(); r != nil {
 		http.Error(w, "Unexpected error", http.StatusBadRequest)
-		log.Println(r, "\n"+string(debug.Stack()))
+		log.Println(errors.Wrap(r, 2).ErrorStack())
 	}
 }
 
