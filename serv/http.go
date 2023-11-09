@@ -69,9 +69,9 @@ func NewHTTP(host string, port int) *HTTP {
 }
 
 func Recover(w http.ResponseWriter){
-	if r := recover(); r != nil {
+	if err := recover(); err != nil {
 		http.Error(w, "Unexpected error", http.StatusBadRequest)
-		log.Println(errors.Wrap(r, 2).ErrorStack())
+		log.Println(errors.Wrap(err, 2).ErrorStack())
 	}
 }
 
