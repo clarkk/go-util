@@ -25,7 +25,7 @@ const (
   //  Set the cache expires to 1 hour
   expires = 60 * 60
   
-  //  Set the interval when to purge expired items in the cache
+  //  Set the interval when to purge expired values in the cache to 1 minute
   purge_interval = 60
 )
 
@@ -33,13 +33,14 @@ const (
 var cache_string *cache.Cache[string]
 
 func main(){
+  //  Create cache
   cache_string = cache.New[string](purge_interval)
   
-  cache_key := "key-to-cached-item"
+  cache_key := "key-to-cached-value"
   s, found := cache_string.Get(cache_key)
-  //  Check if the item is cached
+  //  Check if the value is cached
   if !found {
-    //  Cache the item with 1 hour expiration
+    //  Cache the value with 1 hour expiration
     s = "Value to cache"
     cache_string.Set(cache_key, s, expires)
   }
@@ -49,12 +50,14 @@ func main(){
 ```
 
 # go-util/lang
-This package uses `go-util/cache` to cache translations to improve performance
+Handle multiple languages with both errors and strings.
+
+This package uses `go-util/cache` to cache translations to improve performance.
 
 ## Interface to fetch translations from external source like database etc.
 ```
 type Adapter interface {
-  Fetch(string, string, string) (string, error)
+  Fetch(lang, table, key string) (string, error)
 }
 ```
 
@@ -72,8 +75,8 @@ CREATE TABLE `lang` (
 CREATE TABLE `lang_error` (
   `id` smallint(5) UNSIGNED NOT NULL AUTO_INCREMENT,
   `sid` varchar(50) NOT NULL,
-  `da` varchar(400) NOT NULL,
-  `en` varchar(400) NOT NULL,
+  `da` varchar(100) NOT NULL,
+  `en` varchar(100) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE `sid` (`sid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
@@ -92,6 +95,8 @@ package main
 
 import (
   "fmt"
+  "errors"
+  "database/sql"
   "github.com/clarkk/go-util/lang"
   "github.com/clarkk/go-util/serv/req"
 )
@@ -101,9 +106,10 @@ type lang_fetch struct {}
 
 func (l lang_fetch) Fetch(lang, table, key string) (string, error){
   var s string
-  if err := method_to_fetch_translation_from_db("SELECT "+lang+" FROM ."+table+" WHERE sid=?", []any{key}, []any{&s}); err != nil {
+  if err := fetch_from_db("SELECT "+lang+" FROM ."+table+" WHERE sid=?", key, &s); err != nil {
     s = key
-    if !method_to_check_if_error_is_empty_result(err) {
+    if !errors.Is(err, sql.ErrNoRows) {
+      //  Return fatal errors
       return s, err
     }
   }
@@ -116,8 +122,11 @@ func main(){
     "en",
   }
   
+  //  Set cache expires to 24 hours
+  expires := 60 * 60 * 24
+  
   //  Initiate
-  lang.Init(lang_fetch{}, supported_langs)
+  lang.Init(lang_fetch{}, expires, supported_langs)
 }
 
 func route_handler(w http.ResponseWriter, r *http.Request){
@@ -127,6 +136,7 @@ func route_handler(w http.ResponseWriter, r *http.Request){
   //  Optional to get 'Accept-Language' header if provided by the client in request
   accept_lang := req.Accept_lang(r)
   
+  //  Create language instance
   l := lang.New(language, accept_lang)
   
   fmt.Println(l.String("HELLO_WORLD", nil))
@@ -493,7 +503,7 @@ h.Route(serv.ALL, "/", func(w http.ResponseWriter, r *http.Request){
 
 ## Get session from `r *http.Request` context
 ```
-s := sess.Session(r)
+s := sess.Request(r)
 data := s.Data()
 ```
 

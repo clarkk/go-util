@@ -8,18 +8,16 @@ import (
 	"github.com/clarkk/go-util/cache"
 )
 
-const expires = 60 * 60 * 24
-
 var (
 	fetch			Adapter
+	expires			int
 	langs			[]string
-	
 	cache_string	*cache.Cache[string]
 )
 
 type (
 	Adapter interface {
-		Fetch(string, string, string) (string, error)
+		Fetch(lang, table, key string) (string, error)
 	}
 	
 	Lang struct {
@@ -31,13 +29,13 @@ type (
 )
 
 //	Initiate with caching and fetch adapter
-func Init(fetcher Adapter, languages []string){
-	fetch = fetcher
-	langs = make([]string, len(languages))
+func Init(fetcher Adapter, cache_expires int, languages []string){
+	fetch	= fetcher
+	expires	= cache_expires
+	langs	= make([]string, len(languages))
 	for i, lang := range languages {
 		langs[i] = strings.ToLower(lang)
 	}
-	
 	cache_string = cache.New[string](60)
 }
 
@@ -96,6 +94,7 @@ func (l *Lang) fetch(table, key string) string {
 		var err error
 		s, err = fetch.Fetch(l.lang, table, key)
 		if err != nil {
+			//	Log fatal errors
 			log.Printf("Lang: %v", err)
 		} else {
 			cache_string.Set(cache_key, s, expires)
