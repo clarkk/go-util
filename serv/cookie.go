@@ -3,7 +3,7 @@ package serv
 import "net/http"
 
 //	Set cookie on client
-func Set_cookie(w http.ResponseWriter, name string, value string, max_age int){
+func Set_cookie(w http.ResponseWriter, name, value string, max_age int){
 	http.SetCookie(w, &http.Cookie{
 		Name:		name,
 		Value:		value,
@@ -16,7 +16,7 @@ func Set_cookie(w http.ResponseWriter, name string, value string, max_age int){
 }
 
 //	Set cookie on client without HttpOnly
-func Set_cookie_script(w http.ResponseWriter, name string, value string, max_age int){
+func Set_cookie_script(w http.ResponseWriter, name, value string, max_age int){
 	http.SetCookie(w, &http.Cookie{
 		Name:		name,
 		Value:		value,

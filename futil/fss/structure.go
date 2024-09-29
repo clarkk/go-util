@@ -97,7 +97,7 @@ func Purge(path string) error {
 }
 
 //	Compile structured file path from file ID
-func compile(file_id int, path string, min_digits int, create bool, folder bool) (string, error){
+func compile(file_id int, path string, min_digits int, create, folder bool) (string, error){
 	id 		:= strconv.Itoa(file_id)
 	path 	= strings.TrimRight(path, "/")
 	length	:= len(id)

@@ -324,7 +324,7 @@ func match_path(path string, route *route) bool {
 	return true
 }
 
-func match_path_depth(path string, pattern string) bool {
+func match_path_depth(path, pattern string) bool {
 	return path == pattern || path[len(pattern)] == '/'
 }
 

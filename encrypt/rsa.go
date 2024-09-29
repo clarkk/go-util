@@ -40,7 +40,7 @@ func Generate_RSA(bits int) ([]byte, []byte, error){
 	return key_pem, pub_pem, nil
 }
 
-func Verify_RSA(private []byte, public []byte) bool {
+func Verify_RSA(private, public []byte) bool {
 	key := decode_private_pem(private)
 	pub := decode_public_pem(public)
 	return key.PublicKey.Equal(pub)
@@ -60,7 +60,7 @@ func Encrypt_public_base64(msg string, public []byte) (string, error){
 	return base64.URLEncoding.EncodeToString(ciphertext), err
 }
 
-func Decrypt_private(ciphertext []byte, private []byte) (string, error){
+func Decrypt_private(ciphertext, private []byte) (string, error){
 	var label []byte
 	text, err := rsa.DecryptOAEP(sha512.New(), rand.Reader, decode_private_pem(private), ciphertext, label)
 	if err != nil {
@@ -93,7 +93,7 @@ func Sign_base64(msg string, private []byte) (string, error){
 	return base64.URLEncoding.EncodeToString(signature), nil
 }
 
-func Verify(msg string, signature []byte, public []byte) bool {
+func Verify(msg string, signature, public []byte) bool {
 	err := rsa.VerifyPKCS1v15(decode_public_pem(public), crypto.SHA512, digest(msg), signature)
 	if err != nil {
 		return false
@@ -101,7 +101,7 @@ func Verify(msg string, signature []byte, public []byte) bool {
 	return true
 }
 
-func Verify_base64(msg string, signature string, public []byte) bool {
+func Verify_base64(msg, signature string, public []byte) bool {
 	signature_bytes, _ := base64.URLEncoding.DecodeString(signature)
 	return Verify(msg, signature_bytes, public)
 }
