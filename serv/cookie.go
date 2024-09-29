@@ -9,7 +9,7 @@ func Set_cookie(w http.ResponseWriter, name, value string, max_age int){
 		Value:		value,
 		MaxAge:		max_age,
 		Path:		"/",
-		SameSite:	http.SameSiteLaxMode,
+		SameSite:	http.SameSiteStrictMode,//http.SameSiteLaxMode,
 		Secure:		true,
 		HttpOnly:	true,
 	})
@@ -22,7 +22,7 @@ func Set_cookie_script(w http.ResponseWriter, name, value string, max_age int){
 		Value:		value,
 		MaxAge:		max_age,
 		Path:		"/",
-		SameSite:	http.SameSiteLaxMode,
+		SameSite:	http.SameSiteStrictMode,//http.SameSiteLaxMode,
 		Secure:		true,
 		HttpOnly:	false,
 	})
