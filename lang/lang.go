@@ -106,7 +106,7 @@ func (l *Lang) fetch(table, key string) string {
 func string_replace(s string, replace Rep) string {
 	for k, v := range replace {
 		switch t := v.(type) {
-		case int32:
+		case int:
 			s = strings.Replace(s, "%"+k+"%", strconv.Itoa(t), -1)
 		case int64:
 			s = strings.Replace(s, "%"+k+"%", strconv.FormatInt(t, 10), -1)
