@@ -60,7 +60,11 @@ func Recover(w http.ResponseWriter){
 }
 
 func Get_slug(r *http.Request, index int) string {
-	fields := r.Context().Value(ctx_slug).([]string)
+	value := r.Context().Value(ctx_slug)
+	if value == nil {
+		return ""
+	}
+	fields := value.([]string)
 	if len(fields) < index + 1 {
 		return ""
 	}
