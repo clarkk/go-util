@@ -144,7 +144,12 @@ func (s *Session) Closed() bool {
 
 //	Get session data
 func (s *Session) Data() session_data {
-	return s.data
+	if s.csrf_token() == "" {
+		return s.data
+	}
+	data := s.data
+	delete(data, csrf_token)
+	return data
 }
 
 //	Write session data
@@ -152,6 +157,11 @@ func (s *Session) Write(data map[string]any){
 	if s.Closed() {
 		panic("Can not write to closed session")
 	}
+	
+	if _, ok := data[csrf_token]; ok {
+		panic("Can not use reserved CSRF key in session")
+	}
+	
 	s.data = data
 }
 
@@ -169,11 +179,21 @@ func (s *Session) Destroy(){
 	}
 	s.closed 	= true;
 	serv.Delete_cookie(s.w, session_cookie_name)
+	if s.csrf_token() != "" {
+		serv.Delete_cookie(s.w, csrf_token)
+	}
 	p.delete(s.sid)
 	s.w 		= nil
 	s.data 		= nil
 	s.lock.Unlock()
 	go delete_remote_session(context.Background(), s.sid)
+}
+
+func (s *Session) csrf_token() string {
+	if token, ok := s.data[csrf_token]; ok {
+		return token.(string)
+	}
+	return ""
 }
 
 func (s *Session) close() bool {
