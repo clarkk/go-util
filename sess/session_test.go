@@ -22,7 +22,7 @@ func Test_session(t *testing.T){
 	Init(expires, "", "", purge_interval)
 	
 	//	Create session and close it
-	sid := sid_uuid()
+	sid := uuid_string()
 	fmt.Println("create: "+sid)
 	s := create_session(sid)
 	s.close()

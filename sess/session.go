@@ -263,7 +263,7 @@ func delete_remote_session(ctx context.Context, sid string){
 }
 
 func set_cookie(w http.ResponseWriter) string {
-	sid := sid_uuid()
+	sid := uuid_string()
 	serv.Set_cookie(w, session_cookie_name, sid, 0)
 	return sid
 }
@@ -280,6 +280,6 @@ func time_unix() int64 {
 	return time.Now().Unix()
 }
 
-func sid_uuid() string {
+func uuid_string() string {
 	return uuid.NewString()
 }
