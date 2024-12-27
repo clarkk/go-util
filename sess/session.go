@@ -26,13 +26,13 @@ var (
 type (
 	Session struct {
 		closed 		bool
+		w 			http.ResponseWriter
 		data 		session_data
 		sess 		*session
 	}
 	
 	session struct {
 		sid 		string
-		w 			http.ResponseWriter
 		lock 		sync.Mutex
 		closed 		bool
 		expires 	int64
@@ -97,15 +97,14 @@ func Start(w http.ResponseWriter, r *http.Request) *Session {
 		}
 	}
 	
-	s.w = w
+	wrapped := wrap_session(s)
+	wrapped.w = w
 	
-	sess := wrap_session(s)
-	
-	ctx = context.WithValue(ctx, ctx_sess, sess)
+	ctx = context.WithValue(ctx, ctx_sess, wrapped)
 	r2 := r.WithContext(ctx)
 	*r = *r2
 	
-	return sess
+	return wrapped
 }
 
 //	Fetch session from request context
@@ -130,7 +129,7 @@ func (s *Session) Regenerate(){
 	go delete_remote_session(ctx, s.sess.sid)
 	
 	//	Regenerate sid and update session
-	s.sess.sid = set_cookie(s.sess.w)
+	s.sess.sid = set_cookie(s.w)
 	p.set(s.sess.sid, s.sess)
 	go update_remote_session(ctx, s.sess)
 }
@@ -188,13 +187,12 @@ func (s *Session) Destroy(){
 	}
 	s.closed 		= true;
 	s.sess.closed 	= true;
-	serv.Delete_cookie(s.sess.w, session_cookie_name)
+	serv.Delete_cookie(s.w, session_cookie_name)
 	if s.csrf_token() != "" {
-		serv.Delete_cookie(s.sess.w, csrf_token)
+		serv.Delete_cookie(s.w, csrf_token)
 	}
 	p.delete(s.sess.sid)
 	s.data 			= nil
-	s.sess.w 		= nil
 	s.sess.data 	= nil
 	s.sess.lock.Unlock()
 	go delete_remote_session(context.Background(), s.sess.sid)
@@ -213,7 +211,6 @@ func (s *Session) close() bool {
 	}
 	s.closed 		= true;
 	s.sess.closed 	= true;
-	s.sess.w 		= nil
 	s.sess.lock.Unlock()
 	return true
 }

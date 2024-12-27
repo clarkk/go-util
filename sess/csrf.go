@@ -18,7 +18,7 @@ func (s *Session) Generate_CSRF(){
 	hash_hex	:= hex.EncodeToString(hash[:])
 	s.data[csrf_token]		= hash_hex
 	s.sess.data[csrf_token]	= hash_hex
-	serv.Set_cookie_script(s.sess.w, csrf_token, hash_hex, 0)
+	serv.Set_cookie_script(s.w, csrf_token, hash_hex, 0)
 }
 
 func (s *Session) Verify_CSRF(r *http.Request) bool {
