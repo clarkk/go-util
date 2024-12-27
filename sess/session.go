@@ -25,6 +25,12 @@ var (
 
 type (
 	Session struct {
+		closed 		bool
+		data 		session_data
+		sess 		*session
+	}
+	
+	session struct {
 		sid 		string
 		w 			http.ResponseWriter
 		lock 		sync.Mutex
@@ -33,7 +39,7 @@ type (
 		data 		session_data
 	}
 	
-	sessions 		map[string]*Session
+	sessions 		map[string]*session
 	
 	session_data 	map[string]any
 	
@@ -70,7 +76,7 @@ func Start(w http.ResponseWriter, r *http.Request) *Session {
 	
 	var (
 		sid 	string
-		s 		*Session
+		s 		*session
 	)
 	
 	cookie, err := r.Cookie(session_cookie_name)
@@ -93,11 +99,13 @@ func Start(w http.ResponseWriter, r *http.Request) *Session {
 	
 	s.w = w
 	
-	ctx = context.WithValue(ctx, ctx_sess, s)
+	sess := wrap_session(s)
+	
+	ctx = context.WithValue(ctx, ctx_sess, sess)
 	r2 := r.WithContext(ctx)
 	*r = *r2
 	
-	return s
+	return sess
 }
 
 //	Fetch session from request context
@@ -118,18 +126,18 @@ func (s *Session) Regenerate(){
 	ctx := context.Background()
 	
 	//	Delete session
-	p.delete(s.sid)
-	go delete_remote_session(ctx, s.sid)
+	p.delete(s.sess.sid)
+	go delete_remote_session(ctx, s.sess.sid)
 	
-	//	Regenerate and update session
-	s.sid = set_cookie(s.w)
-	p.set(s.sid, s)
-	go update_remote_session(ctx, s)
+	//	Regenerate sid and update session
+	s.sess.sid = set_cookie(s.sess.w)
+	p.set(s.sess.sid, s.sess)
+	go update_remote_session(ctx, s.sess)
 }
 
 //	Get session ID
 func (s *Session) Sid() string {
-	return s.sid
+	return s.sess.sid
 }
 
 //	Check if session data is empty
@@ -162,13 +170,14 @@ func (s *Session) Write(data map[string]any){
 		panic("Can not use reserved CSRF key in session")
 	}
 	
-	s.data = data
+	s.data 		= data
+	s.sess.data = data
 }
 
 //	Close session for further writes and release read lock
 func (s *Session) Close(){
 	if s.close() {
-		go update_remote_session(context.Background(), s)
+		go update_remote_session(context.Background(), s.sess)
 	}
 }
 
@@ -177,16 +186,18 @@ func (s *Session) Destroy(){
 	if s.Closed() {
 		panic("Can not destroy closed session")
 	}
-	s.closed 	= true;
-	serv.Delete_cookie(s.w, session_cookie_name)
+	s.closed 		= true;
+	s.sess.closed 	= true;
+	serv.Delete_cookie(s.sess.w, session_cookie_name)
 	if s.csrf_token() != "" {
-		serv.Delete_cookie(s.w, csrf_token)
+		serv.Delete_cookie(s.sess.w, csrf_token)
 	}
-	p.delete(s.sid)
-	s.w 		= nil
-	s.data 		= nil
-	s.lock.Unlock()
-	go delete_remote_session(context.Background(), s.sid)
+	p.delete(s.sess.sid)
+	s.data 			= nil
+	s.sess.w 		= nil
+	s.sess.data 	= nil
+	s.sess.lock.Unlock()
+	go delete_remote_session(context.Background(), s.sess.sid)
 }
 
 func (s *Session) csrf_token() string {
@@ -200,19 +211,20 @@ func (s *Session) close() bool {
 	if s.Closed() {
 		return false
 	}
-	s.closed 	= true;
-	s.w 		= nil
-	s.lock.Unlock()
+	s.closed 		= true;
+	s.sess.closed 	= true;
+	s.sess.w 		= nil
+	s.sess.lock.Unlock()
 	return true
 }
 
-func (s *Session) reset(){
+func (s *session) reset(){
 	s.closed 	= false
 	s.expires 	= expires()
 }
 
-func create_session(sid string) *Session {
-	s := &Session{
+func create_session(sid string) *session {
+	s := &session{
 		sid:		sid,
 		expires:	expires(),
 		data:		session_data{},
@@ -222,7 +234,7 @@ func create_session(sid string) *Session {
 	return s
 }
 
-func fetch_session(ctx context.Context, sid string) *Session {
+func fetch_session(ctx context.Context, sid string) *session {
 	//	Get local session
 	s, expired := p.get(sid);
 	if expired {
@@ -246,7 +258,7 @@ func fetch_session(ctx context.Context, sid string) *Session {
 	return nil
 }
 
-func update_remote_session(ctx context.Context, s *Session){
+func update_remote_session(ctx context.Context, s *session){
 	b, err := json.Marshal(s.data)
 	if err != nil {
 		panic("Session remote update JSON encode: "+err.Error())
@@ -259,6 +271,13 @@ func update_remote_session(ctx context.Context, s *Session){
 func delete_remote_session(ctx context.Context, sid string){
 	if err := rdb.Del(ctx, sid_hash(sid)); err != nil {
 		panic("Session remote delete: "+err.Error())
+	}
+}
+
+func wrap_session(s *session) *Session {
+	return &Session{
+		data:	s.data,
+		sess:	s,
 	}
 }
 

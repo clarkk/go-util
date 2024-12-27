@@ -7,7 +7,7 @@ type pool struct {
 	sessions 		sessions
 }
 
-func (p *pool) get(sid string) (*Session, bool){
+func (p *pool) get(sid string) (*session, bool){
 	p.lock.RLock()
 	defer p.lock.RUnlock()
 	s, ok := p.sessions[sid]
@@ -23,7 +23,7 @@ func (p *pool) get(sid string) (*Session, bool){
 	return s, false
 }
 
-func (p *pool) set(sid string, s *Session){
+func (p *pool) set(sid string, s *session){
 	p.lock.Lock()
 	defer p.lock.Unlock()
 	p.sessions[sid] = s

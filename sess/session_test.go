@@ -24,8 +24,8 @@ func Test_session(t *testing.T){
 	//	Create session and close it
 	sid := uuid_string()
 	fmt.Println("create: "+sid)
-	s := create_session(sid)
-	s.close()
+	sess := wrap_session(create_session(sid))
+	sess.close()
 	
 	//	Fetch the session with concurrency and update session
 	var wg sync.WaitGroup
@@ -47,11 +47,11 @@ func test_update_session(sid string, i int){
 	}
 	
 	s.reset()
-	
-	s.Write(session_data{
+	sess := wrap_session(s)
+	sess.Write(session_data{
 		"test": "test123",
 	})
 	time.Sleep(rand.N(100 * time.Millisecond))
-	s.close()
+	sess.close()
 	fmt.Printf("updated: %s (%d)\n", sid, i)
 }
