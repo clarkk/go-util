@@ -27,6 +27,7 @@ type (
 	Session struct {
 		closed 		bool
 		w 			http.ResponseWriter
+		r 			*http.Request
 		data 		session_data
 		sess 		*session
 	}
@@ -34,7 +35,6 @@ type (
 	session struct {
 		sid 		string
 		lock 		sync.Mutex
-		closed 		bool
 		expires 	int64
 		data 		session_data
 	}
@@ -98,11 +98,13 @@ func Start(w http.ResponseWriter, r *http.Request) *Session {
 	}
 	
 	s := wrap_session(sess)
-	s.w = w
 	
 	ctx = context.WithValue(ctx, ctx_sess, s)
 	r2 := r.WithContext(ctx)
 	*r = *r2
+	
+	s.w = w
+	s.r = r
 	
 	return s
 }
@@ -185,17 +187,19 @@ func (s *Session) Destroy(){
 	if s.Closed() {
 		panic("Can not destroy closed session")
 	}
+	
 	s.closed 		= true;
-	s.sess.closed 	= true;
+	s.data 			= nil
+	
+	//	Delete session
+	p.delete(s.sess.sid)
+	go delete_remote_session(context.Background(), s.sess.sid)
 	serv.Delete_cookie(s.w, session_cookie_name)
 	if s.csrf_token() != "" {
 		serv.Delete_cookie(s.w, csrf_token)
 	}
-	p.delete(s.sess.sid)
-	s.data 			= nil
-	s.sess.data 	= nil
-	s.sess.lock.Unlock()
-	go delete_remote_session(context.Background(), s.sess.sid)
+	
+	s.sess 			= nil
 }
 
 func (s *Session) csrf_token() string {
@@ -209,14 +213,12 @@ func (s *Session) close() bool {
 	if s.Closed() {
 		return false
 	}
-	s.closed 		= true;
-	s.sess.closed 	= true;
+	s.closed 	= true;
 	s.sess.lock.Unlock()
 	return true
 }
 
 func (s *session) reset(){
-	s.closed 	= false
 	s.expires 	= expires()
 }
 
