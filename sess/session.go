@@ -76,35 +76,35 @@ func Start(w http.ResponseWriter, r *http.Request) *Session {
 	
 	var (
 		sid 	string
-		s 		*session
+		sess 	*session
 	)
 	
 	cookie, err := r.Cookie(session_cookie_name)
 	if err != nil {
 		//	Create session cookie and start new session
 		sid 	= set_cookie(w)
-		s 		= create_session(sid)
+		sess 	= create_session(sid)
 	} else {
 		sid 	= cookie.Value
-		s 		= fetch_session(ctx, sid)
-		if s == nil {
+		sess 	= fetch_session(ctx, sid)
+		if sess == nil {
 			//	Create session cookie and start new session
 			sid 	= set_cookie(w)
-			s 		= create_session(sid)
+			sess 	= create_session(sid)
 		} else {
 			//	Continue session
-			s.reset()
+			sess.reset()
 		}
 	}
 	
-	wrapped := wrap_session(s)
-	wrapped.w = w
+	s := wrap_session(sess)
+	s.w = w
 	
-	ctx = context.WithValue(ctx, ctx_sess, wrapped)
+	ctx = context.WithValue(ctx, ctx_sess, s)
 	r2 := r.WithContext(ctx)
 	*r = *r2
 	
-	return wrapped
+	return s
 }
 
 //	Fetch session from request context
