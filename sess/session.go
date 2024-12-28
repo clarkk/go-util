@@ -11,9 +11,7 @@ import (
 	"github.com/clarkk/go-util/serv"
 )
 
-const (
-	ctx_sess ctx_key 	= ""
-)
+const ctx_sess ctx_key = ""
 
 var (
 	once 					sync.Once
@@ -188,8 +186,8 @@ func (s *Session) Destroy(){
 		panic("Can not destroy closed session")
 	}
 	
-	s.closed 		= true;
-	s.data 			= nil
+	s.closed 	= true;
+	s.data 		= nil
 	
 	//	Delete session
 	p.delete(s.sess.sid)
@@ -199,7 +197,7 @@ func (s *Session) Destroy(){
 		serv.Delete_cookie(s.w, csrf_token)
 	}
 	
-	s.sess 			= nil
+	s.sess 		= nil
 }
 
 func (s *Session) csrf_token() string {
@@ -213,13 +211,13 @@ func (s *Session) close() bool {
 	if s.Closed() {
 		return false
 	}
-	s.closed 	= true;
+	s.closed = true;
 	s.sess.lock.Unlock()
 	return true
 }
 
 func (s *session) reset(){
-	s.expires 	= expires()
+	s.expires = expires()
 }
 
 func create_session(sid string) *session {
