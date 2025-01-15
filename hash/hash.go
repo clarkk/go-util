@@ -5,7 +5,7 @@ import (
 	"crypto/sha256"
 )
 
-func SHA256_hex(s string) string {
-	sum := sha256.Sum256([]byte(s))
+func SHA256_hex(b []byte) string {
+	sum := sha256.Sum256(b)
 	return hex.EncodeToString(sum[:])
 }
