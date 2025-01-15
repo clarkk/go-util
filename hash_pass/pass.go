@@ -1,4 +1,4 @@
-package pass_hash
+package hash_pass
 
 import (
 	"fmt"

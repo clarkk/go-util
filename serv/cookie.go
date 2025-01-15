@@ -34,9 +34,5 @@ func Delete_cookie(w http.ResponseWriter, name string){
 		Name:		name,
 		Value:		"",
 		MaxAge:		-1,
-		//Path:		"/",
-		//SameSite:	http.SameSiteLaxMode,
-		//Secure:		true,
-		//HttpOnly:	true,
 	})
 }
