@@ -32,12 +32,12 @@ func Get_path_slugs(r *http.Request, base string) (string, []string){
 }
 
 //	Check if POST body exceeds limit
-func Post_limit(w Writer, r *http.Request, limit_kb int){
+func Post_limit(w io.Writer, r *http.Request, limit_kb int){
 	r.Body = http.MaxBytesReader(w, r.Body, int64(limit_kb * 1024))
 }
 
 //	Check if POST body exceeds limit and read body
-func Post_limit_read(w Writer, r *http.Request, limit_kb int) ([]byte, error){
+func Post_limit_read(w io.Writer, r *http.Request, limit_kb int) ([]byte, error){
 	Post_limit(w, r, limit_kb)
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
