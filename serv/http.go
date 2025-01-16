@@ -16,13 +16,9 @@ import (
 	"github.com/clarkk/go-util/cmd"
 )
 
-const (
-	ctx_slug ctx_key 	= ""
-)
+const ctx_slug ctx_key = ""
 
-var (
-	re_sld 				= regexp.MustCompile(`^[a-z]+(?:[a-z\-]+[a-z]+)?\.$`)
-)
+var re_sld = regexp.MustCompile(`^[a-z]+(?:[a-z\-]+[a-z]+)?\.$`)
 
 type (
 	HTTP struct {
