@@ -1,6 +1,7 @@
 package sess
 
 import (
+	"fmt"
 	"net/http"
 	"github.com/clarkk/go-util/hash"
 	"github.com/clarkk/go-util/serv"
@@ -14,6 +15,7 @@ func Verify_CSRF(r *http.Request) bool {
 		return false
 	}
 	token := s.csrf_token()
+	fmt.Println("CSRF:", token, r.Header.Get("X-CSRF-token"))
 	return token != "" && token == r.Header.Get("X-CSRF-token")
 }
 
