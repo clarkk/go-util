@@ -2,8 +2,6 @@ package sess
 
 import (
 	"net/http"
-	"encoding/hex"
-	"crypto/sha256"
 	"github.com/clarkk/go-util/hash"
 	"github.com/clarkk/go-util/serv"
 )
