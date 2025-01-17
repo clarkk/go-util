@@ -15,7 +15,7 @@ func Verify_CSRF(r *http.Request) bool {
 		return false
 	}
 	token := s.csrf_token()
-	fmt.Println("CSRF:", token, r.Header.Get("X-CSRF-token"))
+	fmt.Println("verify CSRF:", token, r.Header.Get("X-CSRF-token"))
 	return token != "" && token == r.Header.Get("X-CSRF-token")
 }
 

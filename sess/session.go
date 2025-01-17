@@ -169,7 +169,7 @@ func (s *Session) Write(data map[string]any){
 	if _, ok := data[csrf_token]; ok {
 		panic("Can not use reserved CSRF key in session")
 	}
-	
+	fmt.Println("write:", s.csrf_token())
 	s.data 		= data
 	s.sess.data = data
 }
