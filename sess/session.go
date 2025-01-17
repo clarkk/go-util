@@ -152,12 +152,13 @@ func (s *Session) Closed() bool {
 
 //	Get session data
 func (s *Session) Data() session_data {
-	if s.csrf_token() == "" {
-		return s.data
+	data := map[string]any{}
+	for k, v := range s.data {
+		//	Return data without CSRF token
+		if k != csrf_token {
+			data[k] = v
+		}
 	}
-	//	Return data without CSRF token
-	data := s.data
-	delete(data, csrf_token)
 	return data
 }
 

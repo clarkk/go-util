@@ -21,9 +21,7 @@ func Verify_CSRF(r *http.Request) bool {
 	}
 	
 	token := s.csrf_token()
-	
 	fmt.Println("verify CSRF:", token, cookie.Value)
-	
 	return token != "" && token == cookie.Value
 }
 
