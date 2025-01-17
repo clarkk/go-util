@@ -1,7 +1,6 @@
 package sess
 
 import (
-	"fmt"
 	"sync"
 	"time"
 	"context"
@@ -175,7 +174,7 @@ func (s *Session) Write(data map[string]any){
 	if token := s.csrf_token(); token != "" {
 		data[csrf_token] = token
 	}
-	fmt.Println("write:", data)
+	
 	s.data 		= data
 	s.sess.data = data
 }
