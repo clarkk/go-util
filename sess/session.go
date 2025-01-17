@@ -151,7 +151,7 @@ func (s *Session) Closed() bool {
 
 //	Get session data
 func (s *Session) Data() session_data {
-	if s.csrf_token() == "" {
+	if s.CSRF_token() == "" {
 		return s.data
 	}
 	data := s.data
@@ -193,14 +193,14 @@ func (s *Session) Destroy(){
 	p.delete(s.sess.sid)
 	go delete_remote_session(context.Background(), s.sess.sid)
 	serv.Delete_cookie(s.w, session_cookie_name)
-	if s.csrf_token() != "" {
+	if s.CSRF_token() != "" {
 		serv.Delete_cookie(s.w, csrf_token)
 	}
 	
 	s.sess 		= nil
 }
 
-func (s *Session) csrf_token() string {
+func (s *Session) CSRF_token() string {
 	if token, ok := s.data[csrf_token]; ok {
 		return token.(string)
 	}
