@@ -14,9 +14,18 @@ func Verify_CSRF(r *http.Request) bool {
 	if s == nil {
 		return false
 	}
+	
+	cookie, err := r.Cookie(csrf_token)
+	if err != nil {
+		return false
+	}
+	
 	token := s.csrf_token()
-	fmt.Println("verify CSRF:", token, r.Header.Get("X-CSRF-token"))
-	return token != "" && token == r.Header.Get("X-CSRF-token")
+	
+	fmt.Println("CSRF cookie:", cookie)
+	fmt.Println("verify CSRF:", token, cookie)
+	
+	return token != "" && token == cookie
 }
 
 func (s *Session) Generate_CSRF(){
