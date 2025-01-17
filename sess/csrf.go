@@ -19,7 +19,7 @@ func Verify_CSRF(r *http.Request) bool {
 	return token != "" && token == r.Header.Get("X-CSRF-token")
 }
 
-func (s *Session) Generate_CSRF() string {
+func (s *Session) Generate_CSRF(){
 	if s.Closed() {
 		panic("Can not write to closed session")
 	}
@@ -28,5 +28,4 @@ func (s *Session) Generate_CSRF() string {
 	s.data[csrf_token]		= token
 	s.sess.data[csrf_token]	= token
 	serv.Set_cookie_script(s.w, csrf_token, token, 0)
-	return token
 }
