@@ -171,6 +171,7 @@ func (s *Session) Write(data map[string]any){
 		panic("Can not use reserved CSRF key in session")
 	}
 	
+	//	Add CSRF token to data
 	if token := s.csrf_token(); token != "" {
 		data[csrf_token] = token
 	}
