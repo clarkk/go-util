@@ -13,7 +13,10 @@ import (
 	"compress/gzip"
 )
 
-const perm = 0644
+const (
+	perm_file 	= 0644
+	perm_dir 	= 0744
+)
 
 type rotate_writer struct {
 	lock		sync.Mutex
@@ -55,7 +58,7 @@ func (w *rotate_writer) rotate(){
 	defer f.Close()
 	
 	dir := w.file+".d"
-	if err := os.MkdirAll(dir, perm); err != nil {
+	if err := os.MkdirAll(dir, perm_dir); err != nil {
 		log.Printf("Log: Unable to create gzip directory (rotation) %s: %v", dir, err)
 		return
 	}
@@ -102,7 +105,7 @@ func (w *rotate_writer) compile_gzip_filename(dir string) (string, bool){
 
 func (w *rotate_writer) create() error {
 	var err error
-	w.f, err = os.OpenFile(w.file, os.O_CREATE | os.O_WRONLY | os.O_APPEND, perm)
+	w.f, err = os.OpenFile(w.file, os.O_CREATE | os.O_WRONLY | os.O_APPEND, perm_file)
 	return err
 }
 
