@@ -162,6 +162,7 @@ func (s *Session) Data() session_data {
 	if s.CSRF_token() == "" {
 		return s.data
 	}
+	//	Return data without CSRF token
 	data := s.data
 	delete(data, csrf_token)
 	return data

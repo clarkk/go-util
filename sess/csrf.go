@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"encoding/hex"
 	"crypto/sha256"
+	"github.com/clarkk/go-util/hash"
 	"github.com/clarkk/go-util/serv"
 )
 
@@ -23,9 +24,8 @@ func (s *Session) Generate_CSRF(){
 		panic("Can not write to closed session")
 	}
 	
-	hash		:= sha256.Sum256([]byte(s.sess.sid+uuid_string()))
-	hash_hex	:= hex.EncodeToString(hash[:])
-	s.data[csrf_token]		= hash_hex
-	s.sess.data[csrf_token]	= hash_hex
-	serv.Set_cookie_script(s.w, csrf_token, hash_hex, 0)
+	token := hash.SHA256_hex([]byte(s.sess.sid+uuid_string()))
+	s.data[csrf_token]		= token
+	s.sess.data[csrf_token]	= token
+	serv.Set_cookie_script(s.w, csrf_token, token, 0)
 }
