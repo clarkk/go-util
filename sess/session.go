@@ -151,7 +151,7 @@ func (s *Session) Closed() bool {
 }
 
 //	Get session data
-func (s *Session) Data() session_data {
+func (s *Session) Data() map[string]any {
 	data := map[string]any{}
 	for k, v := range s.data {
 		//	Return data without CSRF token
