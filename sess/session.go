@@ -134,6 +134,14 @@ func (s *Session) Regenerate(){
 	go update_remote_session(ctx, s.sess)
 }
 
+//	Get CSRF token
+func (s *Session) CSRF_token() string {
+	if token, ok := s.data[csrf_token]; ok {
+		return token.(string)
+	}
+	return ""
+}
+
 //	Get session ID
 func (s *Session) Sid() string {
 	return s.sess.sid
@@ -198,13 +206,6 @@ func (s *Session) Destroy(){
 	}
 	
 	s.sess 		= nil
-}
-
-func (s *Session) CSRF_token() string {
-	if token, ok := s.data[csrf_token]; ok {
-		return token.(string)
-	}
-	return ""
 }
 
 func (s *Session) close() bool {
