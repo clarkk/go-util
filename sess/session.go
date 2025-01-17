@@ -1,7 +1,6 @@
 package sess
 
 import (
-	"fmt"
 	"sync"
 	"time"
 	"context"
@@ -170,7 +169,11 @@ func (s *Session) Write(data map[string]any){
 	if _, ok := data[csrf_token]; ok {
 		panic("Can not use reserved CSRF key in session")
 	}
-	fmt.Println("write:", s.csrf_token())
+	
+	if token := s.csrf_token(); token != "" {
+		data[csrf_token] = token
+	}
+	
 	s.data 		= data
 	s.sess.data = data
 }
