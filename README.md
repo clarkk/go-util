@@ -7,7 +7,7 @@ All packages are extremely simple and lightweight by design
 - [go-util/lang](#go-utillang) Multi-lingual translations with both strings and errors
 - [go-util/serv](#go-utilserv) HTTP server
 - [go-util/sess](#go-utilsess) HTTP sessions
-- [go-util/pass_hash](#go-utilpass_hash) Secure password hashing for storing passwords in databases etc.
+- [go-util/hash_pass](#go-utilhash_pass) Secure password hashing for storing passwords in databases etc.
 
 # go-util/cache
 Lightweight cache with expires (TTL) and syncronized with `sync.RWMutex` that ensures only one can write to the cache at the time.
@@ -507,7 +507,7 @@ s := sess.Request(r)
 data := s.Data()
 ```
 
-# go-util/pass_hash
+# go-util/hash_pass
 Secure password hashing for storing passwords in databases etc.
 - Hashing with Argon2id algorithm
 - Adding randomly generated salt value to hash generation
@@ -522,14 +522,14 @@ import (
   "log"
   "fmt"
   "time"
-  "github.com/clarkk/go-util/pass_hash"
+  "github.com/clarkk/go-util/hash_pass"
 )
 
 func main(){
   password := "the-password"
   
   //  Create new hashing string
-  hash, err := pass_hash.Create(password)
+  hash, err := hash_pass.Create(password)
   if err != nil {
     log.Fatal(err)
   }
@@ -537,7 +537,7 @@ func main(){
   fmt.Println("hash:", hash)
   
   //  Compare if a password is equal to hashing string
-  valid, err := pass_hash.Compare(password, hash)
+  valid, err := hash_pass.Compare(password, hash)
   if err != nil {
     log.Fatal(err)
   }

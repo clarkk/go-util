@@ -22,7 +22,7 @@ type input struct {
 
 func Test_get(t *testing.T){
 	for i := range data {
-		got 	:= Fss_get(data[i].file_id, data[i].path, data[i].min_digits)
+		got 	:= Get(data[i].file_id, data[i].path, data[i].min_digits)
 		want 	:= data[i].output
 		if got != want {
 			t.Errorf("got %q, wanted %q", got, want)
