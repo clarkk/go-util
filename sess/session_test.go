@@ -28,7 +28,7 @@ func Test_session(t *testing.T){
 		
 		//	Fetch the session with concurrency and update session
 		var wg sync.WaitGroup
-		for i := 0; i < 100; i++ {
+		for i := range 100 {
 			fmt.Printf("open: %s (%d)\n", sid, i)
 			wg.Add(1)
 			go func(i int){

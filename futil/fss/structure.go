@@ -102,7 +102,7 @@ func compile(file_id int, path string, min_digits int, create, folder bool) (str
 	path 	= strings.TrimRight(path, "/")
 	length	:= len(id)
 	
-	for i := 0; i < length; i++ {
+	for i := range length {
 		len := length - i
 		if len <= min_digits {
 			break
