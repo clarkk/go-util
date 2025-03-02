@@ -52,3 +52,7 @@ func Request(r *http.Request) *Environment {
 	}
 	return e
 }
+
+func (e *Environment) Update(d Env_data){
+	e.Env_data = d
+}
