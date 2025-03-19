@@ -1,6 +1,7 @@
 package encrypt
 
 import (
+	"fmt"
 	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
@@ -16,7 +17,7 @@ func Generate_RSA(bits int) ([]byte, []byte, error){
 	//	Generate private key
 	key, err := rsa.GenerateKey(rand.Reader, bits)
 	if err != nil {
-		return []byte{}, []byte{}, err
+		return []byte{}, []byte{}, fmt.Errorf("Unable to generate private key: %v", err)
 	}
 	
 	//	Encode private key to PKCS#1 PEM
@@ -48,7 +49,7 @@ func Encrypt_public(msg string, public []byte) ([]byte, error){
 	var label []byte
 	ciphertext, err := rsa.EncryptOAEP(sha512.New(), rand.Reader, decode_public_pem(public), []byte(msg), label)
 	if err != nil {
-		return []byte{}, err
+		return []byte{}, fmt.Errorf("Unable to encrypt: %v", err)
 	}
 	return ciphertext, nil
 }
@@ -62,7 +63,7 @@ func Decrypt_private(ciphertext, private []byte) (string, error){
 	var label []byte
 	text, err := rsa.DecryptOAEP(sha512.New(), rand.Reader, decode_private_pem(private), ciphertext, label)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("Unable to decrypt: %v", err)
 	}
 	return string(text), nil
 }
@@ -78,7 +79,7 @@ func Decrypt_private_base64(ciphertext string, private []byte) (string, error){
 func Sign(msg string, private []byte) ([]byte, error){
 	signature, err := rsa.SignPKCS1v15(rand.Reader, decode_private_pem(private), crypto.SHA512, digest(msg))
 	if err != nil {
-		return []byte{}, err
+		return []byte{}, fmt.Errorf("Unable to sign: %v", err)
 	}
 	return signature, nil
 }
