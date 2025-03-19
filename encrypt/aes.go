@@ -21,7 +21,7 @@ func Encrypt_AES256_GCM(msg, passphrase string) ([]byte, error){
 	
 	nonce := make([]byte, gcm.NonceSize())
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-		return nil, fmt.Errorf("Unable to generate random nonce: %w", err)
+		return nil, fmt.Errorf("Unable to generate random nonce: %v", err)
 	}
 	
 	ciphertext := gcm.Seal(nonce, nonce, []byte(msg), nil)
@@ -47,7 +47,7 @@ func Decrypt_AES256_GCM(ciphertext []byte, passphrase string) (string, error){
 	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
-		return "", fmt.Errorf("Unable to decrypt ciphertext")
+		return "", fmt.Errorf("Unable to decrypt ciphertext: %v", err)
 	}
 	
 	return string(plaintext), nil
@@ -64,12 +64,12 @@ func Decrypt_AES256_GCM_base64(ciphertext, passphrase string) (string, error){
 func gcm_cipher(passphrase []byte) (cipher.AEAD, error){
 	c, err := aes.NewCipher(passphrase)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to generate AES cipher: %w", err)
+		return nil, fmt.Errorf("Unable to generate AES cipher: %v", err)
 	}
 	
 	gcm, err := cipher.NewGCM(c)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to generate GCM: %w", err)
+		return nil, fmt.Errorf("Unable to generate GCM: %v", err)
 	}
 	
 	return gcm, nil
