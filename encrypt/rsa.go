@@ -10,9 +10,7 @@ import (
 	"encoding/base64"
 )
 
-const (
-	BITS4096 	= 4096
-)
+const BITS4096 = 4096
 
 func Generate_RSA(bits int) ([]byte, []byte, error){
 	//	Generate private key
