@@ -30,7 +30,7 @@ func Encrypt_AES256_GCM(msg, passphrase string) ([]byte, error){
 
 func Encrypt_AES256_GCM_base64(msg, passphrase string) (string, error){
 	ciphertext, err := Encrypt_AES256_GCM(msg, passphrase)
-	return base64.URLEncoding.EncodeToString(ciphertext), err
+	return base64.StdEncoding.EncodeToString(ciphertext), err
 }
 
 func Decrypt_AES256_GCM(ciphertext []byte, passphrase string) (string, error){
@@ -54,7 +54,7 @@ func Decrypt_AES256_GCM(ciphertext []byte, passphrase string) (string, error){
 }
 
 func Decrypt_AES256_GCM_base64(ciphertext, passphrase string) (string, error){
-	ciphertext_bytes, err := base64.URLEncoding.DecodeString(ciphertext)
+	ciphertext_bytes, err := base64.StdEncoding.DecodeString(ciphertext)
 	if err != nil {
 		return "", err
 	}

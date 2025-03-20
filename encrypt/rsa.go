@@ -56,7 +56,7 @@ func Encrypt_public(msg string, public []byte) ([]byte, error){
 
 func Encrypt_public_base64(msg string, public []byte) (string, error){
 	ciphertext, err := Encrypt_public(msg, public)
-	return base64.URLEncoding.EncodeToString(ciphertext), err
+	return base64.StdEncoding.EncodeToString(ciphertext), err
 }
 
 func Decrypt_private(ciphertext, private []byte) (string, error){
@@ -69,7 +69,7 @@ func Decrypt_private(ciphertext, private []byte) (string, error){
 }
 
 func Decrypt_private_base64(ciphertext string, private []byte) (string, error){
-	ciphertext_bytes, err := base64.URLEncoding.DecodeString(ciphertext)
+	ciphertext_bytes, err := base64.StdEncoding.DecodeString(ciphertext)
 	if err != nil {
 		return "", err
 	}
@@ -89,7 +89,7 @@ func Sign_base64(msg string, private []byte) (string, error){
 	if err != nil {
 		return "", err
 	}
-	return base64.URLEncoding.EncodeToString(signature), nil
+	return base64.StdEncoding.EncodeToString(signature), nil
 }
 
 func Verify(msg string, signature, public []byte) bool {
@@ -101,7 +101,7 @@ func Verify(msg string, signature, public []byte) bool {
 }
 
 func Verify_base64(msg, signature string, public []byte) bool {
-	signature_bytes, _ := base64.URLEncoding.DecodeString(signature)
+	signature_bytes, _ := base64.StdEncoding.DecodeString(signature)
 	return Verify(msg, signature_bytes, public)
 }
 
