@@ -7,7 +7,7 @@ import (
 )
 
 func SHA1_hex(b []byte) string {
-	sum := sha1.Sum1(b)
+	sum := sha1.Sum(b)
 	return hex.EncodeToString(sum[:])
 }
 
