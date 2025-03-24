@@ -2,13 +2,9 @@ package req
 
 import (
 	"io"
-	//"fmt"
 	"strings"
-	//"regexp"
 	"net/http"
 )
-
-//var regex_get_query = regexp.MustCompile(`^[\pL_][\pL_0-9]+$`)
 
 func Get_client_IP(r *http.Request) string {
 	ip := r.Header.Get("X-Real-Ip")
@@ -80,24 +76,3 @@ func Query_param_empty(s []string) bool {
 	}
 	return true
 }
-
-/*func Valid_query_param(key string) error {
-	if !regex_get_query.MatchString(key) {
-		return fmt.Errorf("Invalid query parameter: %s", key)
-	}
-	return nil
-}
-
-func Valid_query_param_single(value []string) (string, bool) {
-	switch len(value) {
-	//	Single value (empty): OK
-	case 0:
-		return "", true
-	//	Single value: OK
-	case 1:
-		return value[0], true
-	//	Multiple values: ERROR
-	default:
-		return "", false
-	}
-}*/
