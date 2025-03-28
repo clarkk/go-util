@@ -110,6 +110,8 @@ func string_replace(s string, replace Rep) string {
 			s = strings.Replace(s, "%"+k+"%", strconv.Itoa(t), -1)
 		case int64:
 			s = strings.Replace(s, "%"+k+"%", strconv.FormatInt(t, 10), -1)
+		case uint64:
+			s = strings.Replace(s, "%"+k+"%", strconv.FormatUInt(t, 10), -1)
 		case float32:
 			s = strings.Replace(s, "%"+k+"%", strconv.FormatFloat(float64(t), 'f', -1, 64), -1)
 		case float64:
