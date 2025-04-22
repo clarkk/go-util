@@ -50,7 +50,9 @@ func NewHTTP(tld, listen_ip string, listen_port int) *HTTP {
 //	Recover from panic inside route handler
 func Recover(w http.ResponseWriter){
 	if err := recover(); err != nil {
-		http.Error(w, "Unexpected error", http.StatusInternalServerError)
+		if !w.(*Writer).Sent_headers() {
+			http.Error(t, "Unexpected error", http.StatusInternalServerError)
+		}
 		log.Println(errors.Wrap(err, 2).ErrorStack())
 	}
 }
