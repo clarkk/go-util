@@ -147,7 +147,7 @@ func (h *HTTP) Run(){
 
 //	Subhost and route pattern handler
 func (h *HTTP) serve(w http.ResponseWriter, r *http.Request){
-	w := &Writer{ResponseWriter: w}
+	w = &Writer{ResponseWriter: w}
 	
 	if !strings.HasSuffix(r.Host, h.tld) || r.Host == h.tld {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
