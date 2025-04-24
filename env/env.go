@@ -32,7 +32,7 @@ func Type_error(key string, value any) error {
 	return fmt.Errorf("Invalid env key type: %s (%T)", key, value)
 }
 
-func New(r *http.Request, d Env_data) *Environment {
+func New_request(r *http.Request, d Env_data) *Environment {
 	e := &Environment{
 		Env_data:	d,
 		Lang:		lang.New(d.Lang(), req.Accept_lang(r)),
