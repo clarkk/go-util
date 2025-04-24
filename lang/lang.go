@@ -11,7 +11,7 @@ import (
 var (
 	fetch			Adapter
 	expires			int
-	langs			[]string
+	support_langs	[]string
 	cache_string	*cache.Cache[string]
 )
 
@@ -21,8 +21,8 @@ type (
 	}
 	
 	Lang struct {
-		accept_lang	[]string
-		lang		string
+		accept_langs	[]string
+		lang			string
 	}
 	
 	Rep 	map[string]any
@@ -30,19 +30,19 @@ type (
 
 //	Initiate with caching and fetch adapter
 func Init(fetcher Adapter, cache_expires int, languages []string){
-	fetch	= fetcher
-	expires	= cache_expires
-	langs	= make([]string, len(languages))
+	fetch			= fetcher
+	expires			= cache_expires
+	support_langs	= make([]string, len(languages))
 	for i, lang := range languages {
-		langs[i] = strings.ToLower(lang)
+		support_langs[i] = strings.ToLower(lang)
 	}
 	cache_string = cache.New[string](60)
 }
 
 //	Create new instance and set language with accepted language
-func New(lang string, accept_lang []string) Lang {
+func New(lang string, accept_langs []string) Lang {
 	l := Lang{
-		accept_lang: accept_lang,
+		accept_langs: accept_langs,
 	}
 	l.Set(lang)
 	return l
@@ -51,22 +51,22 @@ func New(lang string, accept_lang []string) Lang {
 //	Set language
 func (l *Lang) Set(lang string){
 	if lang = strings.ToLower(lang); lang != "" {
-		for _, v := range langs {
+		for _, v := range support_langs {
 			if lang == v {
 				l.lang = v
 				return
 			}
 		}
 	}
-	for _, a := range l.accept_lang {
-		for _, v := range langs {
+	for _, a := range l.accept_langs {
+		for _, v := range support_langs {
 			if a == v {
 				l.lang = v
 				return
 			}
 		}
 	}
-	l.lang = langs[0]
+	l.lang = support_langs[0]
 }
 
 //	Get string translation
