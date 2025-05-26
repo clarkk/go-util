@@ -150,7 +150,7 @@ func (h *HTTP) Run(){
 //	Subhost and route pattern handler
 func (h *HTTP) serve(w http.ResponseWriter, r *http.Request){
 	w = &Writer{ResponseWriter: w}
-	fmt.Println("host:", r.Host, "tld:")
+	
 	if !strings.HasSuffix(r.Host, h.tld) || r.Host == h.tld {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		log.Printf("Unsupported host (TLD %s): %s", h.tld, r.Host)
@@ -158,7 +158,6 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request){
 	}
 	
 	sld 	:= r.Host[:len(r.Host)-h.tld_len]
-	fmt.Println("sld:", sld)
 	s, ok 	:= h.subhosts[sld]
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
@@ -168,7 +167,7 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request){
 	
 	ctx 	:= r.Context()
 	path 	:= strip_trailing_slash(r.URL.Path)
-	fmt.Println("path:", path)
+	
 	var match_route *route_handler
 	for _, route := range s.routes {
 		if route.regex != nil {
