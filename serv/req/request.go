@@ -42,6 +42,10 @@ func Post_limit_read(w http.ResponseWriter, r *http.Request, limit_kb int) ([]by
 	return b, nil
 }
 
+func User_agent(r *http.Request) string {
+	return r.Header.Get("User-Agent")
+}
+
 //	Get accepted languages
 func Accept_lang(r *http.Request) []string {
 	s := r.Header.Get("Accept-Language")
