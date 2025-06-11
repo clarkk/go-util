@@ -319,8 +319,8 @@ func main(){
       },
       
       //  Apply a chain of adapters/middleware before the main HTTP handler
-      adapt_method1(),
       adapt_method2(),
+      adapt_method1(),
     )).
     
     //  Accepts all methods: GET, POST, DELETE etc. (with 60 seconds timeout)
@@ -336,8 +336,8 @@ func main(){
       },
       
       //  Apply a chain of adapters/middleware before the main HTTP handler
-      adapt_method1(),
       adapt_method2(),
+      adapt_method1(),
     ))
   
   //  Start server
@@ -443,9 +443,9 @@ Route(serv.GET, "/get", 60, serv.Adapt(
     },
     
     //  Apply a chain of adapters/middleware before the main HTTP handler
-    adapt_auth(),             //  Executed first
-    adapt_something(),        //  Executed second
     adapt_something_else(),   //  Executed third
+    adapt_something(),        //  Executed second
+    adapt_auth(),             //  Executed first
   ))
 ```
 
