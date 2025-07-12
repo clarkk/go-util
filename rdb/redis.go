@@ -33,6 +33,7 @@ func Connected() bool {
 	return connected
 }
 
+//	Fetch key
 func Get(ctx context.Context, key string) (string, bool){
 	value, err := client.Get(ctx, key).Result()
 	empty := err == redis.Nil
@@ -52,16 +53,21 @@ func Hgetall(ctx context.Context, key string, ref any){
 	}
 }
 
+//	Store a single value associated with a key
 func Set(ctx context.Context, key string, value []byte, expires int) error {
 	return client.Set(ctx, key, value, time.Duration(expires) * time.Second).Err()
 }
 
+//	Store multiple key-value pairs with a key
 func Hset(ctx context.Context, key string, values any, expires int) error {
-	err := client.HSet(ctx, key, values).Err()
+	if err := client.HSet(ctx, key, values).Err(); err != nil {
+		return err
+	}
 	client.Expire(ctx, key, time.Duration(expires) * time.Second)
-	return err
+	return nil
 }
 
+//	Delete key
 func Del(ctx context.Context, key string) error {
 	return client.Del(ctx, key).Err()
 }
