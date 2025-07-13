@@ -44,8 +44,8 @@ func Get(ctx context.Context, key string) (string, bool){
 }
 
 //	Store a single value associated with hash
-func Set(ctx context.Context, key string, value []byte, expires int) error {
-	return client.Set(ctx, key, value, time.Duration(expires) * time.Second).Err()
+func Set(ctx context.Context, key string, value []byte, expire int) error {
+	return client.Set(ctx, key, value, time_expire(expire)).Err()
 }
 
 //	Fetch field in hash
@@ -70,15 +70,23 @@ func Hgetall(ctx context.Context, key string, ref any){
 }
 
 //	Store multiple key-value pairs in hash
-func Hset(ctx context.Context, key string, values any, expires int) error {
+func Hset(ctx context.Context, key string, values any, expire int) error {
 	if err := client.HSet(ctx, key, values).Err(); err != nil {
 		return err
 	}
-	client.Expire(ctx, key, time.Duration(expires) * time.Second)
+	Expire(ctx, key, expire)
 	return nil
+}
+
+func Expire(ctx context.Context, key string, expire int){
+	client.Expire(ctx, key, time_expire(expire))
 }
 
 //	Delete hash
 func Del(ctx context.Context, key string) error {
 	return client.Del(ctx, key).Err()
+}
+
+func time_expire(expire int) time.Time {
+	return time.Duration(expire) * time.Second
 }
