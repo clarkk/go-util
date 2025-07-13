@@ -6,10 +6,10 @@ import (
 )
 
 //	Store members in set
-func Sadd(ctx context.Context, key string, values []any, expires int) error {
+func Sadd(ctx context.Context, key string, values []any, expire int) error {
 	if err := client.SAdd(ctx, key, values...).Err(); err != nil {
 		return err
 	}
-	client.Expire(ctx, key, time.Duration(expires) * time.Second)
+	Expire(ctx, key, expire)
 	return nil
 }
