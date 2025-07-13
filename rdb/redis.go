@@ -87,6 +87,6 @@ func Del(ctx context.Context, key string) error {
 	return client.Del(ctx, key).Err()
 }
 
-func time_expire(expire int) time.Time {
+func time_expire(expire int) time.Duration {
 	return time.Duration(expire) * time.Second
 }
