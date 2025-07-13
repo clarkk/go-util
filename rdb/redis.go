@@ -33,7 +33,7 @@ func Connected() bool {
 	return connected
 }
 
-//	Fetch key
+//	Fetch hash
 func Get(ctx context.Context, key string) (string, bool){
 	value, err := client.Get(ctx, key).Result()
 	empty := err == redis.Nil
@@ -43,6 +43,22 @@ func Get(ctx context.Context, key string) (string, bool){
 	return value, !empty
 }
 
+//	Store a single value associated with hash
+func Set(ctx context.Context, key string, value []byte, expires int) error {
+	return client.Set(ctx, key, value, time.Duration(expires) * time.Second).Err()
+}
+
+//	Fetch field in hash
+func Hget(ctx context.Context, key, field string) (string, bool){
+	value, err := client.HGet(ctx, key, field).Result()
+	empty := err == redis.Nil
+	if err != nil && !empty {
+		panic("Redis hget: "+err.Error())
+	}
+	return value, !empty
+}
+
+//	Fetch all fields in hash
 func Hgetall(ctx context.Context, key string, ref any){
 	res := client.HGetAll(ctx, key)
 	if err := res.Err(); err != nil {
@@ -53,12 +69,7 @@ func Hgetall(ctx context.Context, key string, ref any){
 	}
 }
 
-//	Store a single value associated with a key
-func Set(ctx context.Context, key string, value []byte, expires int) error {
-	return client.Set(ctx, key, value, time.Duration(expires) * time.Second).Err()
-}
-
-//	Store multiple key-value pairs with a key
+//	Store multiple key-value pairs in hash
 func Hset(ctx context.Context, key string, values any, expires int) error {
 	if err := client.HSet(ctx, key, values).Err(); err != nil {
 		return err
@@ -67,7 +78,7 @@ func Hset(ctx context.Context, key string, values any, expires int) error {
 	return nil
 }
 
-//	Delete key
+//	Delete hash
 func Del(ctx context.Context, key string) error {
 	return client.Del(ctx, key).Err()
 }
