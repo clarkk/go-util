@@ -1,7 +1,6 @@
 package rdb
 
 import (
-	"time"
 	"context"
 )
 
