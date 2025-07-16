@@ -39,7 +39,7 @@ func Out_color(output string, color Color){
 	output = strings.Replace(output, "\n", "\r\n\t> ", -1)
 	if verbose == VERB_COLOR {
 		if color != "" {
-			output = "\033["+color+"m"+output+"\033[0m"
+			output = "\033["+string(color)+"m"+output+"\033[0m"
 		}
 	}
 	fmt.Println(output)
