@@ -255,7 +255,7 @@ func fetch_session(ctx context.Context, sid string) (*session, error){
 	
 	//	Get remote session from Redis
 	remote, not_found, err := rdb.Get(ctx, sid_hash(sid))
-	if !not_found && err != nil {
+	if err != nil && !not_found {
 		return nil, err
 	}
 	if remote != "" {
