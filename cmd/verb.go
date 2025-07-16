@@ -31,7 +31,7 @@ func Verbose(v int){
 }
 
 //	Print to stdout without timestamp if verbosity is enabled
-func Color(output string, color Color){
+func Out_color(output string, color Color){
 	if verbose == 0 {
 		return
 	}
