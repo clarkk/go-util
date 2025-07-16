@@ -65,7 +65,7 @@ func Init(expires int, cookie_name, remote_prefix string, purge_interval int){
 }
 
 //	Start session and lock for other concurrent requests to read data from the same session
-func Start(w http.ResponseWriter, r *http.Request) *Session {
+func Start(w http.ResponseWriter, r *http.Request) (*Session, error){
 	if !rdb.Connected() {
 		panic("Redis is not connected")
 	}
@@ -75,16 +75,20 @@ func Start(w http.ResponseWriter, r *http.Request) *Session {
 	var (
 		sid 	string
 		sess 	*session
+		err 	error
 	)
 	
 	cookie, err := r.Cookie(session_cookie_name)
 	if err != nil {
 		//	Create session cookie and start new session
-		sid 	= set_cookie(w)
-		sess 	= create_session(sid)
+		sid 		= set_cookie(w)
+		sess 		= create_session(sid)
 	} else {
-		sid 	= cookie.Value
-		sess 	= fetch_session(ctx, sid)
+		sid 		= cookie.Value
+		sess, err 	= fetch_session(ctx, sid)
+		if err != nil {
+			return nil, err
+		}
 		if sess == nil {
 			//	Create session cookie and start new session
 			sid 	= set_cookie(w)
@@ -104,7 +108,7 @@ func Start(w http.ResponseWriter, r *http.Request) *Session {
 	s.w = w
 	s.r = r
 	
-	return s
+	return s, nil
 }
 
 //	Fetch session from request context
@@ -238,28 +242,32 @@ func create_session(sid string) *session {
 	return s
 }
 
-func fetch_session(ctx context.Context, sid string) *session {
+func fetch_session(ctx context.Context, sid string) (*session, error){
 	//	Get local session
 	s, expired := p.get(sid);
 	if expired {
 		p.delete(sid)
-		return nil
+		return nil, nil
 	}
 	if s != nil {
-		return s
+		return s, nil
 	}
 	
 	//	Get remote session from Redis
-	if remote, _ := rdb.Get(ctx, sid_hash(sid)); remote != "" {
+	remote, not_found, err := rdb.Get(ctx, sid_hash(sid))
+	if !not_found && err != nil {
+		return nil, err
+	}
+	if remote != "" {
 		//	Copy and use remote session
 		s := create_session(sid)
 		if err := json.Unmarshal([]byte(remote), &s.data); err != nil {
 			panic("Session remote fetch JSON decode: "+err.Error())
 		}
-		return s
+		return s, nil
 	}
 	
-	return nil
+	return nil, nil
 }
 
 func update_remote_session(ctx context.Context, s *session){

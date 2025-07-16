@@ -94,7 +94,7 @@ func test_update_session(t *testing.T, sid string, i int){
 }
 
 func test_fetch_session(t *testing.T, sid string) *Session {
-	sess := fetch_session(ctx, sid)
+	sess, _ := fetch_session(ctx, sid)
 	if sess == nil {
 		t.Fatalf("Unable to fetch session")
 	}
