@@ -34,13 +34,10 @@ func Connected() bool {
 }
 
 //	Fetch hash
-func Get(ctx context.Context, key string) (string, bool){
-	value, err := client.Get(ctx, key).Result()
-	empty := err == redis.Nil
-	if err != nil && !empty {
-		panic("Redis get: "+err.Error())
-	}
-	return value, !empty
+func Get(ctx context.Context, key string) (value string, not_found bool, err error){
+	value, err = client.Get(ctx, key).Result()
+	not_found = not_found_error(err)
+	return
 }
 
 //	Store a single value associated with hash
@@ -49,24 +46,22 @@ func Set(ctx context.Context, key string, value []byte, expire int) error {
 }
 
 //	Fetch field in hash
-func Hget(ctx context.Context, key, field string) (string, bool){
-	value, err := client.HGet(ctx, key, field).Result()
-	empty := err == redis.Nil
-	if err != nil && !empty {
-		panic("Redis hget: "+err.Error())
-	}
-	return value, !empty
+func Hget(ctx context.Context, key, field string) (value string, not_found bool, err error){
+	value, err = client.HGet(ctx, key, field).Result()
+	not_found = not_found_error(err)
+	return
 }
 
 //	Fetch all fields in hash
-func Hgetall(ctx context.Context, key string, ref any){
+func Hgetall(ctx context.Context, key string, ref any) error {
 	res := client.HGetAll(ctx, key)
 	if err := res.Err(); err != nil {
-		panic("Redis hgetall: "+err.Error())
+		return err
 	}
 	if err := res.Scan(ref); err != nil {
-		panic("Redis hgetall scan: "+err.Error())
+		return err
 	}
+	return nil
 }
 
 //	Store multiple key-value pairs in hash
@@ -74,12 +69,15 @@ func Hset(ctx context.Context, key string, values any, expire int) error {
 	if err := client.HSet(ctx, key, values).Err(); err != nil {
 		return err
 	}
-	Expire(ctx, key, expire)
+	if err := Expire(ctx, key, expire); err != nil {
+		return err
+	}
 	return nil
 }
 
-func Expire(ctx context.Context, key string, expire int){
-	client.Expire(ctx, key, time_expire(expire))
+func Expire(ctx context.Context, key string, expire int) error {
+	status := client.Expire(ctx, key, time_expire(expire))
+    return status.Err()
 }
 
 //	Delete hash
@@ -87,6 +85,18 @@ func Del(ctx context.Context, key string) error {
 	return client.Del(ctx, key).Err()
 }
 
+//	Close connection
+func Close() error {
+	if client != nil {
+		return client.Close()
+	}
+	return nil
+}
+
 func time_expire(expire int) time.Duration {
 	return time.Duration(expire) * time.Second
+}
+
+func not_found_error(err error) bool {
+	return err != nil && err == redis.Nil
 }
