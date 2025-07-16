@@ -8,16 +8,18 @@ import (
 )
 
 const (
-	GRAY 		= "1;30"
-	GREEN 		= "0;32"
-	BLUE 		= "0;36"
-	YELLOW		= "1;33"
-	RED 		= "0;31"
-	PURPLE		= "0;35"
+	GRAY Color 		= "1;30"
+	GREEN Color 	= "0;32"
+	BLUE Color 		= "0;36"
+	YELLOW Color	= "1;33"
+	RED Color 		= "0;31"
+	PURPLE Color	= "0;35"
 	
 	VERB_PLAIN 	= 1
 	VERB_COLOR 	= 2
 )
+
+type Color string
 
 var (
 	verbose 	= 0
@@ -29,7 +31,7 @@ func Verbose(v int){
 }
 
 //	Print to stdout without timestamp if verbosity is enabled
-func Color(output, color string){
+func Color(output string, color Color){
 	if verbose == 0 {
 		return
 	}

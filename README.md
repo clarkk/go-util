@@ -476,7 +476,10 @@ h.Route(serv.ALL, "/", 60, func(w http.ResponseWriter, r *http.Request){
   defer serv.Recover(w)
   
   //  Start session (with read-lock)
-  s := sess.Start(w, r)
+  s, err := sess.Start(w, r)
+  if err != nil {
+    panic("Start session: "+err.Error())
+  }
   defer s.Close()
   
   //  Get session data
@@ -500,7 +503,10 @@ h.Route(serv.ALL, "/", func(w http.ResponseWriter, r *http.Request){
   defer serv.Recover(w)
   
   //  Start session (with read-lock)
-  s := sess.Start(w, r)
+  s, err := sess.Start(w, r)
+  if err != nil {
+    panic("Start session: "+err.Error())
+  }
   defer s.Close()
   
   /*
@@ -523,7 +529,10 @@ h.Route(serv.ALL, "/", func(w http.ResponseWriter, r *http.Request){
   defer serv.Recover(w)
   
   //  Start session (with read-lock)
-  s := sess.Start(w, r)
+  s, err := sess.Start(w, r)
+  if err != nil {
+    panic("Start session: "+err.Error())
+  }
   defer s.Close()
   
   //  Destroy session (will close the session)
@@ -539,7 +548,10 @@ h.Route(serv.ALL, "/", func(w http.ResponseWriter, r *http.Request){
   defer serv.Recover(w)
   
   //  Start session with read-lock
-  s := sess.Start(w, r)
+  s, err := sess.Start(w, r)
+  if err != nil {
+    panic("Start session: "+err.Error())
+  }
   defer s.Close()
   
   //  Get session data

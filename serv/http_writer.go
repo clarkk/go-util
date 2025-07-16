@@ -1,8 +1,6 @@
 package serv
 
-import (
-	"net/http"
-)
+import "net/http"
 
 type Writer struct {
 	http.ResponseWriter

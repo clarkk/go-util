@@ -77,7 +77,7 @@ func Hset(ctx context.Context, key string, values any, expire int) error {
 
 func Expire(ctx context.Context, key string, expire int) error {
 	status := client.Expire(ctx, key, time_expire(expire))
-    return status.Err()
+	return status.Err()
 }
 
 //	Delete hash
