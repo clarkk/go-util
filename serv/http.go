@@ -79,7 +79,7 @@ func (h *HTTP) Test(){
 
 //	Apply subhost with underlying routes
 func (h *HTTP) Subhost(sld string) *subhost {
-	return h.Subhost_prefix(sld, "")
+	return h.Subhost_path_prefix(sld, "")
 }
 
 //	Apply subhost with underlying routes and path prefix
