@@ -100,8 +100,8 @@ func (h *HTTP) Subhost_path_prefix(sld, path_prefix string) *subhost {
 			if path_prefix[0] != '/' {
 				log.Fatalf("Path prefix must start with '/': %s -> /%s", path_prefix, path_prefix)
 			}
+			log.Fatalf("Path prefix contains invalid chars")
 		}
-		log.Fatalf("Path prefix contains invalid chars")
 	}
 	h.subhosts[sld] = &subhost{
 		path_prefix:	path_prefix,
