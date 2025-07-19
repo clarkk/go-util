@@ -28,6 +28,7 @@ type (
 	Method 			string
 	
 	subhost struct {
+		path_prefix	string
 		map_routes 	map_routes
 		map_exact	map_exact
 		routes 		routes
@@ -76,6 +77,10 @@ func (s *subhost) Route_blind(method Method, pattern string) *subhost {
 }
 
 func (s *subhost) route(method Method, pattern string, timeout int, handler http.HandlerFunc, exact, blind bool) *subhost {
+	if s.path_prefix != "" {
+		pattern = s.path_prefix+pattern
+	}
+	
 	validate_pattern(pattern)
 	
 	key_method 	:= string(method)

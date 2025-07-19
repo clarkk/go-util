@@ -18,7 +18,10 @@ import (
 
 const ctx_slug ctx_key = ""
 
-var re_sld = regexp.MustCompile(`^[a-z]+(?:[a-z\-]+[a-z]+)?\.$`)
+var (
+	re_sld			= regexp.MustCompile(`^[a-z]+(?:[a-z\-]+[a-z]+)?\.$`)
+	re_path_prefix	= regexp.MustCompile(`^\/[a-z]+(?:[a-z\-_]+[a-z]+)?$`)
+)
 
 type (
 	HTTP struct {
@@ -76,6 +79,12 @@ func (h *HTTP) Test(){
 
 //	Apply subhost with underlying routes
 func (h *HTTP) Subhost(sld string) *subhost {
+	return h.Subhost_prefix(sld, "")
+}
+
+//	Apply subhost with underlying routes and path prefix
+func (h *HTTP) Subhost_path_prefix(sld, path_prefix string) *subhost {
+	//	Validate subhost (sub-level domain)
 	if !re_sld.MatchString(sld) {
 		if sld[len(sld)-1:] != "." {
 			log.Fatalf("Subhost must end with '.': %s -> %s.", sld, sld)
@@ -85,7 +94,17 @@ func (h *HTTP) Subhost(sld string) *subhost {
 	if _, ok := h.subhosts[sld]; ok {
 		log.Fatalf("Subhost already exists: %s", sld)
 	}
+	//	Validate path prefix
+	if path_prefix != "" {
+		if !re_path_prefix.MatchString(path_prefix) {
+			if path_prefix[0] != "/" {
+				log.Fatalf("Path prefix must start with '/': %s -> /%s", path_prefix, path_prefix)
+			}
+		}
+		log.Fatalf("Path prefix contains invalid chars")
+	}
 	h.subhosts[sld] = &subhost{
+		path_prefix:	path_prefix,
 		map_routes:		map_routes{},
 		map_exact:		map_exact{},
 		routes:			routes{},
