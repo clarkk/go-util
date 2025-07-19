@@ -19,8 +19,8 @@ import (
 const ctx_slug ctx_key = ""
 
 var (
-	re_sld			= regexp.MustCompile(`^[a-z]+(?:[a-z\-]+[a-z]+)?\.$`)
-	re_path_prefix	= regexp.MustCompile(`^\/[a-z]+(?:[a-z\-_]+[a-z]+)?$`)
+	re_sld			= regexp.MustCompile(`^[a-z]+(?:[a-z-]+[a-z]+)?\.$`)
+	re_path_prefix	= regexp.MustCompile(`^/[a-z]+(?:[a-z-_]+[a-z]+)?$`)
 )
 
 type (
