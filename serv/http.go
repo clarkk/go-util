@@ -97,7 +97,7 @@ func (h *HTTP) Subhost_path_prefix(sld, path_prefix string) *subhost {
 	//	Validate path prefix
 	if path_prefix != "" {
 		if !re_path_prefix.MatchString(path_prefix) {
-			if path_prefix[0] != "/" {
+			if path_prefix[0] != '/' {
 				log.Fatalf("Path prefix must start with '/': %s -> /%s", path_prefix, path_prefix)
 			}
 		}
