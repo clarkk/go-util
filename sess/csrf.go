@@ -7,7 +7,10 @@ import (
 	"github.com/clarkk/go-util/serv"
 )
 
-const csrf_token = "csrf_token"
+const (
+	header_csrf_token	= "X-CSRF-Token"
+	csrf_token			= "csrf_token"
+)
 
 func Verify_CSRF(r *http.Request) bool {
 	s := Request(r)
@@ -15,14 +18,10 @@ func Verify_CSRF(r *http.Request) bool {
 		return false
 	}
 	
-	cookie, err := r.Cookie(csrf_token)
-	if err != nil {
-		return false
-	}
-	
-	token := s.csrf_token()
-	fmt.Println("cookie:", cookie.Value, "session:", token)
-	return token != "" && token == cookie.Value
+	header_csrf	:= r.Header.Get(header_csrf_token)
+	token		:= s.csrf_token()
+	fmt.Println("header:", header_csrf, "session:", token)
+	return token != "" && token == header_csrf
 }
 
 func (s *Session) Generate_CSRF(){
