@@ -8,13 +8,13 @@ import (
 )
 
 var (
-	header_csrf_token	string
-	csrf_token			string
+	csrf_header	string
+	csrf_token	string
 )
 
 func Init_CSRF(header, token string){
-	header_csrf_token	= header
-	csrf_token			= token
+	csrf_header	= header
+	csrf_token	= token
 }
 
 func Verify_CSRF(r *http.Request) bool {
@@ -23,9 +23,9 @@ func Verify_CSRF(r *http.Request) bool {
 		return false
 	}
 	
-	header_csrf	:= r.Header.Get(header_csrf_token)
+	header_csrf	:= r.Header.Get(csrf_header)
 	token		:= s.csrf_token()
-	fmt.Println("header:", header_csrf, "session:", token)
+	
 	return token != "" && token == header_csrf
 }
 
