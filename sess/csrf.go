@@ -1,6 +1,7 @@
 package sess
 
 import (
+	"fmt"
 	"net/http"
 	"github.com/clarkk/go-util/hash"
 	"github.com/clarkk/go-util/serv"
@@ -20,6 +21,7 @@ func Verify_CSRF(r *http.Request) bool {
 	}
 	
 	token := s.csrf_token()
+	fmt.Prinln("cookie:", cookie.Value, "session:", token)
 	return token != "" && token == cookie.Value
 }
 
