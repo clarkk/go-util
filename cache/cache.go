@@ -7,11 +7,11 @@ import (
 
 type (
 	Cache[V any] struct {
-		items		map[string]item[V]
+		items		map[string]cache_item[V]
 		lock		sync.RWMutex
 	}
 	
-	item[V any] struct {
+	cache_item[V any] struct {
 		value		V
 		expires		int64
 	}
@@ -20,7 +20,7 @@ type (
 //	Create new cache
 func New[V any](purge_interval int) *Cache[V] {
 	c := &Cache[V]{
-		items: map[string]item[V]{},
+		items: map[string]cache_item[V]{},
 	}
 	//	Purge expired values from cache with time interval
 	ticker := time.NewTicker(time.Duration(purge_interval) * time.Second)
@@ -36,12 +36,12 @@ func New[V any](purge_interval int) *Cache[V] {
 func (c *Cache[V]) Get(key string) (V, bool){
 	c.lock.RLock()
 	defer c.lock.RUnlock()
-	i, ok := c.items[key]
-	if !ok {
+	i, found := c.items[key]
+	if !found {
 		return i.value, false
 	}
 	//	Check if value has expired
-	if time_unix() > i.expires {
+	if i.expires != 0 && time_unix() > i.expires {
 		return i.value, false
 	}
 	return i.value, true
@@ -51,9 +51,9 @@ func (c *Cache[V]) Get(key string) (V, bool){
 func (c *Cache[V]) Set(key string, value V, expires int){
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	c.items[key] = item[V]{
+	c.items[key] = cache_item[V]{
 		value:		value,
-		expires:	time_unix() + int64(expires),
+		expires:	time_expires(expires),
 	}
 }
 
@@ -62,7 +62,7 @@ func (c *Cache[V]) purge_expired(){
 	defer c.lock.Unlock()
 	time_unix := time_unix()
 	for key, i := range c.items {
-		if time_unix > i.expires {
+		if i.expires != 0 && time_unix > i.expires {
 			delete(c.items, key)
 		}
 	}
@@ -70,4 +70,11 @@ func (c *Cache[V]) purge_expired(){
 
 func time_unix() int64 {
 	return time.Now().Unix()
+}
+
+func time_expires(expires int) int64 {
+	if expires == 0 {
+		return 0
+	}
+	return time_unix() + int64(expires)
 }
