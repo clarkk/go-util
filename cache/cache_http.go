@@ -50,7 +50,11 @@ func (c *Cache_http) Handler(handler http.HandlerFunc, expires int) http.Handler
 		
 		c.lock.Lock()
 		defer c.lock.Unlock()
-		crw := new_cache_response_writer(w)
+		crw := &cache_response_writer{
+			ResponseWriter:	w,
+			body:			new(bytes.Buffer),
+			statusCode:		http.StatusOK,
+		}
 		handler.ServeHTTP(crw, r)
 		
 		//	Cache response
@@ -107,14 +111,6 @@ func copy_headers(w http.ResponseWriter) http.Header {
 		copied[k] = values_copied
 	}
 	return copied
-}
-
-func new_cache_response_writer(w http.ResponseWriter) *cache_response_writer {
-	return &cache_response_writer{
-		ResponseWriter:	w,
-		body:			new(bytes.Buffer),
-		statusCode:		http.StatusOK,
-	}
 }
 
 func (w *cache_response_writer) WriteHeader(code int){
