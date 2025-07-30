@@ -13,13 +13,15 @@ const ctx_env ctx_key = ""
 type (
 	Env_data interface {
 		Lang() string
-		Data() map[string]any
+		Data() Properties
 	}
 	
 	Environment struct {
 		Env_data
 		Lang	lang.Lang
 	}
+	
+	Properties map[string]any
 	
 	ctx_key		string
 )
