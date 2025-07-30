@@ -14,7 +14,7 @@ type (
 	Env_data interface {
 		Lang() string
 		Data() Properties
-		Update(Properties) error
+		Update(map[string]any) error
 	}
 	
 	Environment struct {
