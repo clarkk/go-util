@@ -42,7 +42,7 @@ func Verify_CSRF(r *http.Request) bool {
 	if token == "" {
 		return false
 	}
-	
+	fmt.Println(parsed_url.Host, csrf_referer)
 	return token == header_csrf && csrf_referer == parsed_url.Host
 }
 
