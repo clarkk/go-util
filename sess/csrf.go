@@ -10,23 +10,18 @@ import (
 var (
 	csrf_header		string
 	csrf_token		string
-	csrf_referer	string
+	csrf_origin		string
 )
 
 func Init_CSRF(header, token, referer string){
 	csrf_header		= header
 	csrf_token		= token
-	csrf_referer	= referer
+	csrf_origin		= referer
 }
 
 func Verify_CSRF(r *http.Request) bool {
 	s := Request(r)
 	if s == nil {
-		return false
-	}
-	
-	parsed_url, err := url.Parse(r.Header.Get("Referer"))
-	if err != nil {
 		return false
 	}
 	
@@ -36,11 +31,19 @@ func Verify_CSRF(r *http.Request) bool {
 	}
 	
 	token := s.csrf_token()
-	if token == "" {
+	if token == "" || token != header_csrf {
 		return false
 	}
 	
-	return token == header_csrf && csrf_referer == parsed_url.Host
+	if verify_origin(r.Header.Get("Origin")) {
+		return true
+	}
+	
+	if verify_origin(r.Header.Get("Referer")) {
+		return true
+	}
+	
+	return true
 }
 
 func (s *Session) Generate_CSRF(){
@@ -52,4 +55,12 @@ func (s *Session) Generate_CSRF(){
 	s.data[csrf_token]		= token
 	s.sess.data[csrf_token]	= token
 	serv.Set_cookie_script(s.w, csrf_token, token, 0)
+}
+
+func verify_origin(header_url string) bool {
+	parsed_url, err := url.Parse(header_url)
+	if err != nil {
+		return false
+	}
+	return csrf_origin == parsed_url.Host
 }
