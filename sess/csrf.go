@@ -14,9 +14,9 @@ var (
 	csrf_origin		string
 )
 
-func Init_CSRF(token, referer string){
+func Init_CSRF(token, origin string){
 	csrf_token		= token
-	csrf_origin		= referer
+	csrf_origin		= origin
 }
 
 func Verify_CSRF(r *http.Request) bool {
