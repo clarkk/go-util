@@ -7,14 +7,14 @@ import (
 	"github.com/clarkk/go-util/serv"
 )
 
+const CSRF_HEADER_KEY = "X-CSRF-Token"
+
 var (
-	csrf_header		string
 	csrf_token		string
 	csrf_origin		string
 )
 
-func Init_CSRF(header, token, referer string){
-	csrf_header		= header
+func Init_CSRF(token, referer string){
 	csrf_token		= token
 	csrf_origin		= referer
 }
@@ -25,7 +25,7 @@ func Verify_CSRF(r *http.Request) bool {
 		return false
 	}
 	
-	header_csrf := r.Header.Get(csrf_header)
+	header_csrf := r.Header.Get(CSRF_HEADER_KEY)
 	if header_csrf == "" {
 		return false
 	}
