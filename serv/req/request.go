@@ -39,6 +39,7 @@ func Post_limit_read(w http.ResponseWriter, r *http.Request, limit_kb int) ([]by
 	if err != nil {
 		return nil, err
 	}
+	r.Body.Close()
 	return b, nil
 }
 
