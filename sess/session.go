@@ -177,11 +177,18 @@ func (s *Session) Write(data map[string]any){
 	
 	//	Add CSRF token to data
 	if token := s.csrf_token(); token != "" {
-		data[csrf_token] = token
+		copied := make(map[string]any, len(data))
+		for k, v := range data {
+			copied[k] = v
+		}
+		copied[csrf_token] = token
+		
+		s.data 		= copied
+		s.sess.data = copied
+	} else {
+		s.data 		= data
+		s.sess.data = data
 	}
-	
-	s.data 		= data
-	s.sess.data = data
 }
 
 //	Close session for further writes and release read lock
