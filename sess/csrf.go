@@ -19,12 +19,7 @@ func Init_CSRF(token, origin string){
 	csrf_origin		= origin
 }
 
-func Verify_CSRF(r *http.Request) bool {
-	s := Request(r)
-	if s == nil {
-		return false
-	}
-	
+func (s *Session) Verify_CSRF(r *http.Request) bool {
 	header_csrf := r.Header.Get(CSRF_HEADER)
 	if header_csrf == "" {
 		return false
