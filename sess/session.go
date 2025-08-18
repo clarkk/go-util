@@ -140,6 +140,10 @@ func (s *Session) Regenerate(){
 
 //	Get session ID
 func (s *Session) Sid() string {
+	if s.Closed() {
+		panic("Can not fetch session id on a closed session")
+	}
+	
 	return s.sess.sid
 }
 
@@ -155,14 +159,14 @@ func (s *Session) Closed() bool {
 
 //	Get session data
 func (s *Session) Data() map[string]any {
-	data := make(map[string]any, len(s.data))
+	copied := make(map[string]any, len(s.data))
 	for k, v := range s.data {
 		//	Return data without CSRF token
 		if k != csrf_token {
-			data[k] = v
+			copied[k] = v
 		}
 	}
-	return data
+	return copied
 }
 
 //	Write session data
@@ -175,10 +179,7 @@ func (s *Session) Write(data map[string]any){
 		panic("Can not use reserved CSRF key in session")
 	}
 	
-	copied := make(map[string]any, len(data))
-	for k, v := range data {
-		copied[k] = v
-	}
+	copied := copy_data(data)
 	
 	//	Add CSRF token to data
 	if token := s.csrf_token(); token != "" {
@@ -227,7 +228,8 @@ func (s *Session) close() bool {
 	if s.Closed() {
 		return false
 	}
-	s.closed = true;
+	s.closed	= true;
+	s.data		= copy_data(s.data)
 	s.sess.lock.Unlock()
 	return true
 }
@@ -296,6 +298,14 @@ func wrap_session(s *session) *Session {
 		data:	s.data,
 		sess:	s,
 	}
+}
+
+func copy_data(data map[string]any) map[string]any {
+	copied := make(map[string]any, len(data))
+	for k, v := range data {
+		copied[k] = v
+	}
+	return copied
 }
 
 func set_cookie(w http.ResponseWriter) string {

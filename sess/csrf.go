@@ -51,10 +51,13 @@ func (s *Session) Generate_CSRF(){
 		panic("Can not write to closed session")
 	}
 	
-	token := hash.SHA256_hex([]byte(s.sess.sid+uuid_string()))
-	s.data[csrf_token]		= token
-	s.sess.data[csrf_token]	= token
-	serv.Set_cookie_script(s.w, csrf_token, token, 0)
+	serv.Set_cookie_script(s.w, csrf_token, s.generate_CSRF(), 0)
+}
+
+func (s *Session) generate_CSRF() (token string){
+	token = hash.SHA256_hex([]byte(s.sess.sid+uuid_string()))
+	s.data[csrf_token] = token
+	return
 }
 
 func verify_origin(header_url string) bool {
