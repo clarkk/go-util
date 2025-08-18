@@ -155,7 +155,7 @@ func (s *Session) Closed() bool {
 
 //	Get session data
 func (s *Session) Data() map[string]any {
-	data := map[string]any{}
+	data := make(map[string]any, len(s.data))
 	for k, v := range s.data {
 		//	Return data without CSRF token
 		if k != csrf_token {
@@ -191,9 +191,12 @@ func (s *Session) Write(data map[string]any){
 
 //	Close session for further writes and release read lock
 func (s *Session) Close(){
-	if s.close() {
-		go update_remote_session(context.Background(), s.sess)
+	if s.Closed() {
+		panic("Session already closed")
 	}
+	
+	s.close()
+	go update_remote_session(context.Background(), s.sess)
 }
 
 //	Destroy and delete session
@@ -223,13 +226,9 @@ func (s *Session) csrf_token() string {
 	return ""
 }
 
-func (s *Session) close() bool {
-	if s.Closed() {
-		return false
-	}
+func (s *Session) close(){
 	s.closed = true;
 	s.sess.lock.Unlock()
-	return true
 }
 
 func (s *session) reset(){
