@@ -190,6 +190,26 @@ func (s *Session) Write(data map[string]any){
 	s.sess.data = copied
 }
 
+//	Re-open session, write and close
+func (s *Session) Write_back(data map[string]any) error {
+	sess, expired := p.get(s.sess.sid);
+	if sess == nil || expired {
+		return fmt.Errorf("Session expired")
+	}
+	
+	//	Write
+	for k, v := range data {
+		s.data[k]		= v
+		sess.data[k]	= v
+	}
+	
+	//	Close
+	sess.lock.Unlock()
+	go update_remote_session(context.Background(), sess)
+	
+	return nil
+}
+
 //	Close session for further writes and release read lock
 func (s *Session) Close(){
 	if s.close() {
