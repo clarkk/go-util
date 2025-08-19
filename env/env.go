@@ -12,6 +12,7 @@ const ctx_env ctx_key = ""
 
 type (
 	Env_data interface {
+		Session() *sess.Session
 		Lang() string
 		Data() Properties
 		Update(map[string]any) error
@@ -20,6 +21,7 @@ type (
 	Environment struct {
 		Env_data
 		Lang	lang.Lang
+		ctx		context.Context
 	}
 	
 	Properties map[string]any
