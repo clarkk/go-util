@@ -21,7 +21,6 @@ type (
 	Environment struct {
 		Env_data
 		Lang	lang.Lang
-		ctx		context.Context
 	}
 	
 	Properties map[string]any
