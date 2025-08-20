@@ -48,7 +48,7 @@ func Test_session(t *testing.T){
 		sid, s1 := test_create_session()
 		
 		//	Update session 1
-		s1.Write(session_data{
+		s1.Write(map[string]any{
 			"test": "a",
 		})
 		s1.close()
@@ -68,7 +68,7 @@ func Test_session(t *testing.T){
 		
 		//	Update session 2
 		s2 := test_fetch_session(t, sid)
-		s2.Write(session_data{
+		s2.Write(map[string]any{
 			"test": "b",
 		})
 		s2.close()
@@ -103,7 +103,7 @@ func Test_session(t *testing.T){
 		sid, s1 = test_create_session()
 		
 		//	Update session 1
-		s1.Write(session_data{
+		s1.Write(map[string]any{
 			"user_id": "123",
 		})
 		s1.close()
@@ -115,7 +115,7 @@ func Test_session(t *testing.T){
 		wg.Add(1)
 		go func(i int){
 			s2 = test_fetch_session(t, sid)
-			s2.Write(session_data{
+			s2.Write(map[string]any{
 				"user_id": "456",
 			})
 			s2.generate_CSRF()
@@ -171,7 +171,7 @@ func Test_session(t *testing.T){
 
 func test_update_session_random_sleep(t *testing.T, sid string, i int){
 	s := test_fetch_session(t, sid)
-	s.Write(session_data{
+	s.Write(map[string]any{
 		"test": "test123",
 	})
 	time.Sleep(rand.N(100 * time.Millisecond))

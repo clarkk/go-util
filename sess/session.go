@@ -31,6 +31,7 @@ type (
 		sess 		*session
 	}
 	
+	sessions 		map[string]*session
 	session struct {
 		sid 		string
 		lock 		sync.Mutex
@@ -38,9 +39,10 @@ type (
 		data 		session_data
 	}
 	
-	sessions 		map[string]*session
-	
-	session_data 	map[string]any
+	session_data struct {
+		Keys		map[string]any	`json:"keys"`
+		Csrf_token	string			`json:"csrf_token"`
+	}
 	
 	ctx_key 		string
 )
@@ -150,7 +152,7 @@ func (s *Session) Sid() string {
 
 //	Check if session data is empty
 func (s *Session) Empty() bool {
-	return len(s.data) == 0
+	return len(s.data.Keys) == 0
 }
 
 //	Check if session is closed
@@ -160,14 +162,7 @@ func (s *Session) Closed() bool {
 
 //	Get session data
 func (s *Session) Data() map[string]any {
-	copied := make(map[string]any, len(s.data))
-	for k, v := range s.data {
-		//	Return data without CSRF token
-		if k != csrf_token {
-			copied[k] = v
-		}
-	}
-	return copied
+	return copy_data(s.data.Keys)
 }
 
 //	Write session data
@@ -176,19 +171,10 @@ func (s *Session) Write(data map[string]any){
 		panic("Can not write to closed session")
 	}
 	
-	if _, ok := data[csrf_token]; ok {
-		panic("Can not use reserved CSRF key in session")
-	}
-	
 	copied := copy_data(data)
 	
-	//	Add CSRF token to data
-	if token := s.csrf_token(); token != "" {
-		copied[csrf_token] = token
-	}
-	
-	s.data 		= copied
-	s.sess.data = copied
+	s.data.Keys			= copied
+	s.sess.data.Keys	= copied
 }
 
 //	Re-open session, write and close
@@ -200,8 +186,8 @@ func (s *Session) Write_back(data map[string]any) error {
 	
 	//	Write
 	for k, v := range data {
-		s.data[k]		= v
-		sess.data[k]	= v
+		s.data.Keys[k]		= v
+		sess.data.Keys[k]	= v
 	}
 	
 	//	Close
@@ -224,8 +210,9 @@ func (s *Session) Destroy(){
 		panic("Can not destroy closed session")
 	}
 	
-	s.closed 	= true;
-	s.data 		= nil
+	s.closed 			= true;
+	s.data.Keys 		= nil
+	s.data.Csrf_token	= ""
 	
 	//	Delete session
 	p.delete(s.sess.sid)
@@ -239,10 +226,7 @@ func (s *Session) Destroy(){
 }
 
 func (s *Session) csrf_token() string {
-	if token, ok := s.data[csrf_token]; ok {
-		return token.(string)
-	}
-	return ""
+	return s.data.Csrf_token
 }
 
 func (s *Session) close() bool {
@@ -250,7 +234,7 @@ func (s *Session) close() bool {
 		return false
 	}
 	s.closed	= true;
-	s.data		= copy_data(s.data)
+	s.data.Keys	= copy_data(s.data.Keys)
 	s.sess.lock.Unlock()
 	return true
 }
@@ -263,7 +247,9 @@ func create_session(sid string) *session {
 	s := &session{
 		sid:		sid,
 		expires:	expires(),
-		data:		session_data{},
+		data:		session_data{
+			Keys: map[string]any{},
+		},
 	}
 	s.lock.Lock()
 	p.set(sid, s)
@@ -314,19 +300,19 @@ func delete_remote_session(ctx context.Context, sid string){
 	}
 }
 
-func wrap_session(s *session) *Session {
-	return &Session{
-		data:	s.data,
-		sess:	s,
-	}
-}
-
 func copy_data(data map[string]any) map[string]any {
 	copied := make(map[string]any, len(data))
 	for k, v := range data {
 		copied[k] = v
 	}
 	return copied
+}
+
+func wrap_session(s *session) *Session {
+	return &Session{
+		data:	s.data,
+		sess:	s,
+	}
 }
 
 func set_cookie(w http.ResponseWriter) string {
