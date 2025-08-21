@@ -1,6 +1,7 @@
 package sess
 
 import (
+	"fmt"
 	"net/url"
 	"net/http"
 	"github.com/clarkk/go-util/hash"
@@ -20,17 +21,20 @@ func Init_CSRF(token, origin string){
 }
 
 func Verify_CSRF(r *http.Request) bool {
+	fmt.Println("veryfi CSRF")
 	s := Request(r)
 	if s == nil {
 		return false
 	}
 	
 	header_csrf := r.Header.Get(CSRF_HEADER)
+	fmt.Println("header:", header_csrf)
 	if header_csrf == "" {
 		return false
 	}
 	
 	token := s.csrf_token()
+	fmt.Println("token:", token)
 	if token == "" || token != header_csrf {
 		return false
 	}
