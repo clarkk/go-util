@@ -60,7 +60,8 @@ func (s *Session) Generate_CSRF(){
 
 func (s *Session) generate_CSRF() (token string){
 	token = hash.SHA256_hex([]byte(s.sess.sid+uuid_string()))
-	s.data.Csrf_token = token
+	s.data.Csrf_token		= token
+	s.sess.data.Csrf_token	= token
 	return
 }
 
