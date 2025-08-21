@@ -21,7 +21,7 @@ type (
 	
 	Environment struct {
 		Env_data
-		Lang	lang.Lang
+		lang	lang.Lang
 	}
 	
 	Properties map[string]any
@@ -40,14 +40,14 @@ func Type_error(key string, value any) error {
 func New(d Env_data) *Environment {
 	return &Environment{
 		Env_data:	d,
-		Lang:		lang.New(d.Lang(), nil),
+		lang:		lang.New(d.Lang(), nil),
 	}
 }
 
 func New_request(r *http.Request, d Env_data) *Environment {
 	e := &Environment{
 		Env_data:	d,
-		Lang:		lang.New(d.Lang(), req.Accept_lang(r)),
+		lang:		lang.New(d.Lang(), req.Accept_lang(r)),
 	}
 	
 	ctx := context.WithValue(r.Context(), ctx_env, e)
@@ -63,4 +63,12 @@ func Request(r *http.Request) *Environment {
 		return nil
 	}
 	return e
+}
+
+func (e *Environment) Lang_string(key string, replace map[string]any) string {
+	return e.lang.String(key, replace)
+}
+
+func (e *Environment) Lang_error(key string, replace map[string]any) error {
+	return e.lang.Error(key, replace)
 }
