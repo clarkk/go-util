@@ -19,8 +19,8 @@ type (
 		Update(map[string]any) error
 	}
 	
-	Environment struct {
-		Env_data
+	Environment[T Env_data] struct {
+		Env_data T
 		lang	lang.Lang
 	}
 	
@@ -37,15 +37,15 @@ func Type_error(key string, value any) error {
 	return fmt.Errorf("Invalid env key type: %s (%T)", key, value)
 }
 
-func New(d Env_data) *Environment {
-	return &Environment{
+func New[T Env_data](d T) *Environment[T] {
+	return &Environment[T]{
 		Env_data:	d,
 		lang:		lang.New(d.Lang(), nil),
 	}
 }
 
-func New_request(r *http.Request, d Env_data) *Environment {
-	e := &Environment{
+func New_request[T Env_data](r *http.Request, d T) *Environment[T] {
+	e := &Environment[T]{
 		Env_data:	d,
 		lang:		lang.New(d.Lang(), req.Accept_lang(r)),
 	}
@@ -57,18 +57,18 @@ func New_request(r *http.Request, d Env_data) *Environment {
 	return e
 }
 
-func Request(r *http.Request) *Environment {
-	e, ok := r.Context().Value(ctx_env).(*Environment)
+func Request[T Env_data](r *http.Request) *Environment[T] {
+	e, ok := r.Context().Value(ctx_env).(*Environment[T])
 	if !ok {
 		return nil
 	}
 	return e
 }
 
-func (e *Environment) Lang_string(key string, replace map[string]any) string {
+func (e *Environment[T]) Lang_string(key string, replace map[string]any) string {
 	return e.lang.String(key, replace)
 }
 
-func (e *Environment) Lang_error(key string, replace map[string]any) error {
+func (e *Environment[T]) Lang_error(key string, replace map[string]any) error {
 	return e.lang.Error(key, replace)
 }
