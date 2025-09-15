@@ -273,7 +273,7 @@ import (
 
 //  Middleware executed before the main HTTP handler
 func adapt_method1() serv.Adapter {
-  return func(h http.Handler) http.Handler {
+  return func(h http.HandlerFunc) http.HandlerFunc {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
       //  This recover method must be called in the first chained handler
       //  in every route to prevent the server from crashing in case of a panic
@@ -284,21 +284,21 @@ func adapt_method1() serv.Adapter {
       fmt.Println("Method1 executed")
       
       //  Execute next handler in the chain
-      h.ServeHTTP(w, r)
+      h(w, r)
     })
   }
 }
 
 //  Middleware executed before the main HTTP handler
 func adapt_method2() serv.Adapter {
-  return func(h http.Handler) http.Handler {
+  return func(h http.HandlerFunc) http.HandlerFunc {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
       //  This handler is executed in a chain before the main HTTP handler
       
       fmt.Println("Method2 executed")
       
       //  Execute next handler in the chain
-      h.ServeHTTP(w, r)
+      h(w, r)
     })
   }
 }
@@ -419,7 +419,7 @@ Route_exact(serv.ALL, "/base_path/:file", 60, func(w http.ResponseWriter, r *htt
 ```
 //  Verify user authentication
 func adapt_auth() serv.Adapter {
-  return func(h http.Handler) http.Handler {
+  return func(h http.HandlerFunc) http.HandlerFunc {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
       //  This recover method must be called in the first chained handler
       //  in every route to prevent the server from crashing in case of a panic
@@ -431,7 +431,7 @@ func adapt_auth() serv.Adapter {
         return
       }
       
-      h.ServeHTTP(w, r)
+      h(w, r)
     })
   }
 }
