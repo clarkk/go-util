@@ -98,6 +98,7 @@ func (l *Lang) Printer() *message.Printer {
 
 func (l *Lang) set_printer() error {
 	tag, err := language.Parse(l.lang)
+	fmt.Println(tag)
 	if err != nil {
 		fmt.Println(err)
 		return err
