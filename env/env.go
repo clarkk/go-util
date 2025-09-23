@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"context"
 	"net/http"
+	"golang.org/x/text/message"
 	"github.com/clarkk/go-util/lang"
 	"github.com/clarkk/go-util/serv/req"
 	"github.com/clarkk/go-util/sess"
@@ -71,4 +72,8 @@ func (e *Environment) Lang_string(key string, replace map[string]any) string {
 
 func (e *Environment) Lang_error(key string, replace map[string]any) error {
 	return e.lang.Error(key, replace)
+}
+
+func (e *Environment) Lang_printer() *message.Printer {
+	return e.lang.Printer()
 }
