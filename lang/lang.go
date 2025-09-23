@@ -5,6 +5,8 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 	"github.com/clarkk/go-util/cache"
 )
 
@@ -23,6 +25,7 @@ type (
 	Lang struct {
 		accept_langs	[]string
 		lang			string
+		printer			*message.Printer
 	}
 	
 	Rep 	map[string]any
@@ -49,12 +52,12 @@ func New(lang string, accept_langs []string) Lang {
 }
 
 //	Set language
-func (l *Lang) Set(lang string){
+func (l *Lang) Set(lang string) error {
 	if lang = strings.ToLower(lang); lang != "" {
 		for _, v := range support_langs {
 			if lang == v {
 				l.lang = v
-				return
+				return l.set_printer()
 			}
 		}
 	}
@@ -62,11 +65,12 @@ func (l *Lang) Set(lang string){
 		for _, v := range support_langs {
 			if a == v {
 				l.lang = v
-				return
+				return l.set_printer()
 			}
 		}
 	}
 	l.lang = support_langs[0]
+	return l.set_printer()
 }
 
 //	Get string translation
@@ -85,6 +89,19 @@ func (l *Lang) Error(key string, replace map[string]any) error {
 		return errors.New(string_replace(s, replace))
 	}
 	return errors.New(s)
+}
+
+func (l *Lang) Printer() *message.Printer {
+	return l.printer
+}
+
+func (l *Lang) set_printer() error {
+	tag, err := language.Parse(l.lang)
+	if err != nil {
+		return err
+	}
+	l.printer = message.NewPrinter(tag)
+	return nil
 }
 
 func (l *Lang) fetch(table, key string) string {
