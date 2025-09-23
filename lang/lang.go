@@ -52,7 +52,7 @@ func New(lang string, accept_langs []string) Lang {
 }
 
 //	Set language
-func (l *Lang) Set(lang string) error {
+func (l *Lang) Set_(lang string) error {
 	if lang = strings.ToLower(lang); lang != "" {
 		for _, v := range support_langs {
 			if lang == v {
