@@ -1,6 +1,7 @@
 package lang
 
 import (
+	"fmt"
 	"log"
 	"errors"
 	"strconv"
@@ -52,7 +53,7 @@ func New(lang string, accept_langs []string) Lang {
 }
 
 //	Set language
-func (l *Lang) Set_(lang string) error {
+func (l *Lang) Set(lang string) error {
 	if lang = strings.ToLower(lang); lang != "" {
 		for _, v := range support_langs {
 			if lang == v {
@@ -98,6 +99,7 @@ func (l *Lang) Printer() *message.Printer {
 func (l *Lang) set_printer() error {
 	tag, err := language.Parse(l.lang)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 	l.printer = message.NewPrinter(tag)
