@@ -1,6 +1,7 @@
 package lang
 
 import (
+	"math"
 	"golang.org/x/text/message"
 )
 
@@ -9,5 +10,7 @@ type Printer struct {
 }
 
 func (p *Printer) Number_int64(i, factor int64) string {
-	return p.Sprintf("%.2f", float64(i / factor))
+	decimals	:= int(math.Log10(float64(factor)))
+	format		:= fmt.Sprintf("%%.%df", decimals)
+	return p.Sprintf(format, float64(i / factor))
 }
