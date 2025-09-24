@@ -25,7 +25,7 @@ type (
 	Lang struct {
 		accept_langs	[]string
 		lang			string
-		printer			*printer
+		printer			*Printer
 	}
 	
 	Rep 	map[string]any
@@ -91,7 +91,7 @@ func (l *Lang) Error(key string, replace map[string]any) error {
 	return errors.New(s)
 }
 
-func (l *Lang) Printer() *printer {
+func (l *Lang) Printer() *Printer {
 	return l.printer
 }
 
@@ -100,7 +100,7 @@ func (l *Lang) set_printer() error {
 	if err != nil {
 		return err
 	}
-	l.printer = &printer{
+	l.printer = &Printer{
 		message.NewPrinter(tag),
 	}
 	return nil

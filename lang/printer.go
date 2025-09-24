@@ -4,10 +4,10 @@ import (
 	"golang.org/x/text/message"
 )
 
-type printer struct {
+type Printer struct {
 	*message.Printer
 }
 
-func (p *printer) Number(){
+func (p *Printer) Number(){
 	
 }

@@ -74,6 +74,6 @@ func (e *Environment) Lang_error(key string, replace map[string]any) error {
 	return e.lang.Error(key, replace)
 }
 
-func (e *Environment) Lang_printer() *message.Printer {
+func (e *Environment) Lang_printer() *lang.Printer {
 	return e.lang.Printer()
 }
