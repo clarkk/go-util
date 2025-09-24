@@ -13,5 +13,5 @@ type Printer struct {
 func (p *Printer) Number_int64(i, factor int64) string {
 	decimals	:= int(math.Log10(float64(factor)))
 	format		:= fmt.Sprintf("%%.%df", decimals)
-	return p.Sprintf(format, float64(i / factor))
+	return p.Sprintf(format, float64(i) / float64(factor))
 }
