@@ -11,7 +11,7 @@ func SHA256_hex(b []byte) string {
 	return hex.EncodeToString(sum[:])
 }
 
-func HMAC_SHA256_hex(key, msg []byte) string {
+func HMAC_SHA256_hex(msg, key []byte) string {
 	mac := hmac.New(sha256.New, key)
 	mac.Write(msg)
 	return hex.EncodeToString(mac.Sum(nil))
