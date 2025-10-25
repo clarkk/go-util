@@ -21,6 +21,14 @@ func (w *Writer) Write(b []byte) (int, error){
 	return n, err
 }
 
+func (w *Writer) Status() int {
+	return w.status
+}
+
+func (w *Writer) Sent() int {
+	return w.bytes_sent
+}
+
 func (w Writer) Sent_headers() bool {
 	return w.sent_headers
 }
