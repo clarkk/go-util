@@ -4,17 +4,21 @@ import "net/http"
 
 type Writer struct {
 	http.ResponseWriter
-	sent_headers bool
+	sent_headers	bool
+	status			int
+	bytes_sent		int
 }
 
-func (w *Writer) WriteHeader(code int){
-	w.sent_headers = true
-	w.ResponseWriter.WriteHeader(code)
+func (w *Writer) WriteHeader(status int){
+	w.sent_headers	= true
+	w.status		= status
+	w.ResponseWriter.WriteHeader(status)
 }
 
 func (w *Writer) Write(b []byte) (int, error){
-	w.sent_headers = true
-	return w.ResponseWriter.Write(b)
+	n, err := w.ResponseWriter.Write(b)
+	w.bytes_sent += n
+	return n, err
 }
 
 func (w Writer) Sent_headers() bool {
