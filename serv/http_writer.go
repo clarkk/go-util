@@ -16,6 +16,10 @@ func (w *Writer) WriteHeader(status int){
 }
 
 func (w *Writer) Write(b []byte) (int, error){
+	if !w.sent_headers {
+		w.sent_headers	= true
+		w.status		= 200
+	}
 	n, err := w.ResponseWriter.Write(b)
 	w.bytes_sent += n
 	return n, err
