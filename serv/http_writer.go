@@ -9,6 +9,10 @@ type Writer struct {
 	bytes_sent		int
 }
 
+func NewWriter(w http.ResponseWriter) *Writer {
+	return &Writer{ResponseWriter: w}
+}
+
 func (w *Writer) WriteHeader(status int){
 	w.sent_headers	= true
 	w.status		= status
@@ -33,6 +37,6 @@ func (w *Writer) Sent() int {
 	return w.bytes_sent
 }
 
-func (w Writer) Sent_headers() bool {
+func (w *Writer) Sent_headers() bool {
 	return w.sent_headers
 }
