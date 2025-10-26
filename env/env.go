@@ -58,11 +58,10 @@ func New_request(r *http.Request, d Env_data) *Environment {
 }
 
 func Request(r *http.Request) *Environment {
-	e, ok := r.Context().Value(ctx_env).(*Environment)
-	if !ok {
-		return nil
+	if e, ok := r.Context().Value(ctx_env).(*Environment); ok {
+		return e
 	}
-	return e
+	return nil
 }
 
 func (e *Environment) Lang_string(key string, replace map[string]any) string {
