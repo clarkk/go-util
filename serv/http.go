@@ -51,9 +51,9 @@ func NewHTTP(tld, listen_ip string, listen_port int) *HTTP {
 }
 
 //	Recover from panic inside route handler
-func Recover(w http.ResponseWriter){
+func Recover(w Writer){
 	if err := recover(); err != nil {
-		if !w.(*Writer).Sent_headers() {
+		if !w.Sent_headers() {
 			http.Error(w, "Unexpected error", http.StatusInternalServerError)
 		}
 		log.Println(errors.Wrap(err, 2).ErrorStack())
@@ -168,10 +168,10 @@ func (h *HTTP) Run(){
 
 //	Subhost and route pattern handler
 func (h *HTTP) serve(w http.ResponseWriter, r *http.Request){
-	w = &Writer{ResponseWriter: w}
+	hw := NewWriter(w)
 	
 	if !strings.HasSuffix(r.Host, h.tld) || r.Host == h.tld {
-		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		http.Error(hw, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		log.Printf("Unsupported host (TLD %s): %s", h.tld, r.Host)
 		return
 	}
@@ -179,7 +179,7 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request){
 	sld 	:= r.Host[:len(r.Host)-h.tld_len]
 	s, ok 	:= h.subhosts[sld]
 	if !ok {
-		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		http.Error(hw, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		log.Printf("Unsupported subhost (SLD %s): %s", sld, r.Host)
 		return
 	}
@@ -198,7 +198,7 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request){
 					continue
 				}
 				
-				handler, ok := match_method(route, w, r)
+				handler, ok := match_method(route, hw, r)
 				if !ok {
 					return
 				}
@@ -214,7 +214,7 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request){
 		} else {
 			//	Path
 			if match_path(path, route) {
-				handler, ok := match_method(route, w, r)
+				handler, ok := match_method(route, hw, r)
 				if !ok {
 					return
 				}
@@ -226,7 +226,7 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request){
 	
 	//	Return HTTP 404 if no route was matched or route is blind
 	if match_route == nil || match_route.blind {
-		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		http.Error(hw, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		return
 	}
 	
@@ -238,7 +238,7 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request){
 		
 		go func(){
 			//	Serve HTTP request to client
-			match_route.handler(w, r.WithContext(ctx))
+			match_route.handler(hw, r.WithContext(ctx))
 			cancel()
 		}()
 		
@@ -247,12 +247,12 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request){
 		case <-ctx.Done():
 			//	Return HTTP 408 Timeout if request reached timeout
 			if ctx.Err() == context.DeadlineExceeded {
-				http.Error(w, http.StatusText(http.StatusRequestTimeout), http.StatusRequestTimeout)
+				http.Error(hw, http.StatusText(http.StatusRequestTimeout), http.StatusRequestTimeout)
 			}
 		}
 	} else {
 		//	Serve HTTP request to client
-		match_route.handler(w, r.WithContext(ctx))
+		match_route.handler(hw, r.WithContext(ctx))
 	}
 }
 
@@ -313,7 +313,7 @@ func (h *HTTP) used_port_pid() (string, string){
 	return "", ""
 }
 
-func match_method(route *route, w http.ResponseWriter, r *http.Request) (*route_handler, bool){
+func match_method(route *route, w Writer, r *http.Request) (*route_handler, bool){
 	if handler, ok := route.methods[string(ALL)]; ok {
 		return handler, true
 	}
