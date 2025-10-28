@@ -48,12 +48,12 @@ func (c *Cache[V]) Get(key string) (V, bool){
 }
 
 //	Set value in cache
-func (c *Cache[V]) Set(key string, value V, expires int){
+func (c *Cache[V]) Set(key string, value V, ttl int){
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	c.items[key] = cache_item[V]{
 		value:		value,
-		expires:	time_expires(expires),
+		expires:	time_expires(ttl),
 	}
 }
 
@@ -72,9 +72,9 @@ func time_unix() int64 {
 	return time.Now().Unix()
 }
 
-func time_expires(expires int) int64 {
-	if expires == 0 {
+func time_expires(ttl int) int64 {
+	if ttl == 0 {
 		return 0
 	}
-	return time_unix() + int64(expires)
+	return time_unix() + int64(ttl)
 }
