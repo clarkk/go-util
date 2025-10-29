@@ -18,9 +18,9 @@ type (
 )
 
 //	Create new cache
-func New[K comparable, V any](purge_interval int) *Cache[V] {
-	c := &Cache[V]{
-		items: map[k]cache_item[V]{},
+func New[K comparable, V any](purge_interval int) *Cache[K, V] {
+	c := &Cache[K, V]{
+		items: map[K]cache_item[V]{},
 	}
 	//	Purge expired values from cache with time interval
 	ticker := time.NewTicker(time.Duration(purge_interval) * time.Second)
