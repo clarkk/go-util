@@ -18,7 +18,7 @@ type (
 )
 
 //	Create new cache
-func New[K comparable, V any](purge_interval int) *Cache[K, V] {
+func NewCache[K comparable, V any](purge_interval int) *Cache[K, V] {
 	c := &Cache[K, V]{
 		items: map[K]cache_item[V]{},
 	}
