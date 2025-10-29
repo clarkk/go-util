@@ -14,7 +14,7 @@ var (
 	fetch			Adapter
 	expires			int
 	support_langs	[]string
-	cache_string	*cache.Cache[string]
+	cache_string	*cache.Cache[string, string]
 )
 
 type (
@@ -39,7 +39,7 @@ func Init(fetcher Adapter, cache_expires int, languages []string){
 	for i, lang := range languages {
 		support_langs[i] = strings.ToLower(lang)
 	}
-	cache_string = cache.New[string](60)
+	cache_string = cache.New[string, string](60)
 }
 
 //	Create new instance and set language with accepted language
