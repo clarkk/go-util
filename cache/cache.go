@@ -18,9 +18,9 @@ type (
 )
 
 //	Create new cache
-func New[V any](purge_interval int) *Cache[V] {
+func New[K comparable, V any](purge_interval int) *Cache[V] {
 	c := &Cache[V]{
-		items: map[string]cache_item[V]{},
+		items: map[k]cache_item[V]{},
 	}
 	//	Purge expired values from cache with time interval
 	ticker := time.NewTicker(time.Duration(purge_interval) * time.Second)
@@ -33,7 +33,7 @@ func New[V any](purge_interval int) *Cache[V] {
 }
 
 //	Get cached value
-func (c *Cache[V]) Get(key string) (V, bool){
+func (c *Cache[K, V]) Get(key K) (V, bool){
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 	i, found := c.items[key]
@@ -48,7 +48,7 @@ func (c *Cache[V]) Get(key string) (V, bool){
 }
 
 //	Set value in cache
-func (c *Cache[V]) Set(key string, value V, ttl int){
+func (c *Cache[K, V]) Set(key K, value V, ttl int){
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	c.items[key] = cache_item[V]{
@@ -57,7 +57,7 @@ func (c *Cache[V]) Set(key string, value V, ttl int){
 	}
 }
 
-func (c *Cache[V]) purge_expired(){
+func (c *Cache[K, V]) purge_expired(){
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	time_unix := time_unix()
