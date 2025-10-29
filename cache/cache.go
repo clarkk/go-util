@@ -6,9 +6,9 @@ import (
 )
 
 type (
-	Cache[V any] struct {
-		items		map[string]cache_item[V]
+	Cache[K comparable, V any] struct {
 		lock		sync.RWMutex
+		items		map[K]cache_item[V]
 	}
 	
 	cache_item[V any] struct {
