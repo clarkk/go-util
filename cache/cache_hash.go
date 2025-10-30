@@ -64,10 +64,14 @@ func (c *Hash[K, V]) Get(key K) (V, error){
 	}
 	c.lock.RUnlock()
 	
+	return c.Refresh(key)
+}
+
+//	Refresh value in cache
+func (c *Hash[K, V]) Refresh(key K) (V, error){
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	
-	//	Cache refresh
 	value, hash, err := c.refresh(key)
 	if err != nil {
 		var zero V
