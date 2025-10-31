@@ -6,7 +6,11 @@ import (
 )
 
 type (
-	Hash[K comparable, V any] struct {
+	Refresher interface {
+		Hash() string
+	}
+	
+	Hash[K comparable, V Refresher] struct {
 		lock		sync.RWMutex
 		items		map[K]hash_item[V]
 		ttl			int
@@ -14,7 +18,7 @@ type (
 		refresh		func(key K) (V, string, error)
 	}
 	
-	hash_item[V any] struct {
+	hash_item[V Refresher] struct {
 		value		V
 		hash		string
 		expires		int64
@@ -22,7 +26,7 @@ type (
 )
 
 //	Create new hash cache
-func NewHash[K comparable, V any](
+func NewHash[K comparable, V Refresher](
 	ttl int,
 	verify func(key K, hash string) (bool, error),
 	refresh func(key K) (V, string, error),
@@ -72,14 +76,14 @@ func (c *Hash[K, V]) Refresh(key K) (V, error){
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	
-	value, hash, err := c.refresh(key)
+	value, err := c.refresh(key)
 	if err != nil {
 		var zero V
 		return zero, err
 	}
 	c.items[key] = hash_item[V]{
 		value:		value,
-		hash:		hash,
+		hash:		value.Hash(),
 		expires:	time_expires(c.ttl),
 	}
 	return value, nil
