@@ -11,12 +11,12 @@ type (
 		items		map[K]hash_item[V]
 		ttl			int
 		verify		func(key K, hash string) (bool, error)
-		refresh		func(key K) (V, string, error)
+		refresh		func(key K) (V, *string, error)
 	}
 	
 	hash_item[V any] struct {
 		value		V
-		hash		string
+		hash		*string
 		expires		int64
 	}
 )
@@ -25,7 +25,7 @@ type (
 func NewHash[K comparable, V any](
 	ttl int,
 	verify func(key K, hash string) (bool, error),
-	refresh func(key K) (V, string, error),
+	refresh func(key K) (V, *string, error),
 	purge_interval int,
 ) *Hash[K, V] {
 	c := &Hash[K, V]{
