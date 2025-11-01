@@ -56,7 +56,7 @@ func NewCache_hash[K comparable, V any](
 	return c
 }
 
-func Hash[V any](v V) (string, error){
+func Hash(v any) (string, error){
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 	if err := enc.Encode(v); err != nil {
