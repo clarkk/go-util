@@ -1,9 +1,11 @@
 package cache
 
 import (
+	"fmt"
 	"log"
 	"time"
 	"sync"
+	"bytes"
 	"encoding/gob"
 	"github.com/clarkk/go-util/hash"
 )
