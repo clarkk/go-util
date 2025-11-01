@@ -93,6 +93,14 @@ func (c *Hash[K, V]) Refresh(key K) (V, error){
 	return value, nil
 }
 
+func (c *Hash[K, V]) Delete(key K){
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	if _, ok := c.items[key]; ok {
+		delete(c.items, key)
+	}
+}
+
 func (c *Hash[K, V]) purge_expired(){
 	if ok := c.lock.TryLock(); !ok {
 		return
