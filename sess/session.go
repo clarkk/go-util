@@ -1,6 +1,7 @@
 package sess
 
 import (
+	"log"
 	"fmt"
 	"sync"
 	"time"
@@ -61,7 +62,14 @@ func Init(expires int, cookie_name, remote_prefix string, purge_interval int){
 		ticker := time.NewTicker(time.Duration(purge_interval) * time.Second)
 		go func(){
 			for range ticker.C {
-				go p.purge_expired()
+				func(){
+					defer func(){
+						if r := recover(); r != nil {
+							log.Printf("purge_expired panic: %v", r)
+						}
+					}()
+					p.purge_expired()
+				}()
 			}
 		}()
 	})

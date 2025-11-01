@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"log"
 	"time"
 	"sync"
 )
@@ -26,7 +27,14 @@ func NewCache[K comparable, V any](purge_interval int) *Cache[K, V] {
 	ticker := time.NewTicker(time.Duration(purge_interval) * time.Second)
 	go func(){
 		for range ticker.C {
-			go c.purge_expired()
+			func(){
+				defer func(){
+					if r := recover(); r != nil {
+						log.Printf("purge_expired panic: %v", r)
+					}
+				}()
+				c.purge_expired()
+			}()
 		}
 	}()
 	return c
@@ -58,7 +66,9 @@ func (c *Cache[K, V]) Set(key K, value V, ttl int){
 }
 
 func (c *Cache[K, V]) purge_expired(){
-	c.lock.Lock()
+	if ok := c.lock.TryLock(); !ok {
+		return
+	}
 	defer c.lock.Unlock()
 	time_unix := time_unix()
 	for key, i := range c.items {

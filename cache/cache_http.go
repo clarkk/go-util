@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"log"
 	"sync"
 	"time"
 	"bytes"
@@ -35,7 +36,14 @@ func New_http(purge_interval int) *Cache_http {
 	ticker := time.NewTicker(time.Duration(purge_interval) * time.Second)
 	go func(){
 		for range ticker.C {
-			go c.purge_expired()
+			func(){
+				defer func(){
+					if r := recover(); r != nil {
+						log.Printf("purge_expired panic: %v", r)
+					}
+				}()
+				c.purge_expired()
+			}()
 		}
 	}()
 	return c
@@ -92,7 +100,9 @@ func (c *Cache_http) cached_response(w http.ResponseWriter, key string) bool {
 }
 
 func (c *Cache_http) purge_expired(){
-	c.lock.Lock()
+	if ok := c.lock.TryLock(); !ok {
+		return
+	}
 	defer c.lock.Unlock()
 	time_unix := time_unix()
 	for key, i := range c.responses {

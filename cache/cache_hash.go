@@ -1,8 +1,9 @@
 package cache
 
 import (
-	"sync"
+	"log"
 	"time"
+	"sync"
 )
 
 type (
@@ -38,7 +39,14 @@ func NewHash[K comparable, V any](
 	ticker := time.NewTicker(time.Duration(purge_interval) * time.Second)
 	go func(){
 		for range ticker.C {
-			go c.purge_expired()
+			func(){
+				defer func(){
+					if r := recover(); r != nil {
+						log.Printf("purge_expired panic: %v", r)
+					}
+				}()
+				c.purge_expired()
+			}()
 		}
 	}()
 	return c
@@ -86,7 +94,9 @@ func (c *Hash[K, V]) Refresh(key K) (V, error){
 }
 
 func (c *Hash[K, V]) purge_expired(){
-	c.lock.Lock()
+	if ok := c.lock.TryLock(); !ok {
+		return
+	}
 	defer c.lock.Unlock()
 	time_unix := time_unix()
 	for key, i := range c.items {

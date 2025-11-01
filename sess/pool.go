@@ -36,7 +36,9 @@ func (p *pool) delete(sid string){
 }
 
 func (p *pool) purge_expired(){
-	p.lock.Lock()
+	if ok := p.lock.TryLock(); !ok {
+		return
+	}
 	defer p.lock.Unlock()
 	time_unix := time_unix()
 	for sid, s := range p.sessions {
