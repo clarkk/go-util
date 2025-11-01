@@ -58,10 +58,9 @@ func Hash[V any](v V) (string, error){
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 	if err := enc.Encode(v); err != nil {
-		return "", fmt.Errorf("binary serialization: %w", err)
+		return "", fmt.Errorf("Binary serialization: %w", err)
 	}
-	sum := sha256.Sum256(buf.Bytes())
-	return hex.EncodeToString(sum[:]), nil
+	return hash.SHA256_hex(buf.Bytes()), nil
 }
 
 //	Get cached value
