@@ -4,18 +4,20 @@ import (
 	"log"
 	"time"
 	"sync"
+	"encoding/gob"
+	"github.com/clarkk/go-util/hash"
 )
 
 type (
-	Hash[K comparable, V any] struct {
+	Cache_hash[K comparable, V any] struct {
 		lock		sync.RWMutex
-		items		map[K]hash_item[V]
+		items		map[K]cache_hash_item[V]
 		ttl			int
 		verify		func(key K, hash string) (bool, error)
 		refresh		func(key K) (V, string, error)
 	}
 	
-	hash_item[V any] struct {
+	cache_hash_item[V any] struct {
 		value		V
 		hash		string
 		expires		int64
@@ -23,14 +25,14 @@ type (
 )
 
 //	Create new hash cache
-func NewHash[K comparable, V any](
+func NewCache_hash[K comparable, V any](
 	ttl int,
 	verify func(key K, hash string) (bool, error),
 	refresh func(key K) (V, string, error),
 	purge_interval int,
-) *Hash[K, V] {
-	c := &Hash[K, V]{
-		items:		map[K]hash_item[V]{},
+) *Cache_hash[K, V] {
+	c := &Cache_hash[K, V]{
+		items:		map[K]cache_hash_item[V]{},
 		ttl:		ttl,
 		verify:		verify,
 		refresh:	refresh,
@@ -52,8 +54,18 @@ func NewHash[K comparable, V any](
 	return c
 }
 
+func Hash[V any](v V) (string, error){
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	if err := enc.Encode(v); err != nil {
+		return "", fmt.Errorf("binary serialization: %w", err)
+	}
+	sum := sha256.Sum256(buf.Bytes())
+	return hex.EncodeToString(sum[:]), nil
+}
+
 //	Get cached value
-func (c *Hash[K, V]) Get(key K) (V, error){
+func (c *Cache_hash[K, V]) Get(key K) (V, error){
 	c.lock.RLock()
 	item, found := c.items[key]
 	//	Cache hit
@@ -76,7 +88,7 @@ func (c *Hash[K, V]) Get(key K) (V, error){
 }
 
 //	Refresh value in cache
-func (c *Hash[K, V]) Refresh(key K) (V, error){
+func (c *Cache_hash[K, V]) Refresh(key K) (V, error){
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	
@@ -85,7 +97,7 @@ func (c *Hash[K, V]) Refresh(key K) (V, error){
 		var zero V
 		return zero, err
 	}
-	c.items[key] = hash_item[V]{
+	c.items[key] = cache_hash_item[V]{
 		value:		value,
 		hash:		hash,
 		expires:	time_expires(c.ttl),
@@ -93,7 +105,7 @@ func (c *Hash[K, V]) Refresh(key K) (V, error){
 	return value, nil
 }
 
-func (c *Hash[K, V]) Delete(key K){
+func (c *Cache_hash[K, V]) Delete(key K){
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	if _, ok := c.items[key]; ok {
@@ -101,7 +113,7 @@ func (c *Hash[K, V]) Delete(key K){
 	}
 }
 
-func (c *Hash[K, V]) purge_expired(){
+func (c *Cache_hash[K, V]) purge_expired(){
 	if ok := c.lock.TryLock(); !ok {
 		return
 	}
