@@ -15,13 +15,13 @@ type (
 		lock		sync.RWMutex
 		items		map[K]cache_hash_item[V]
 		ttl			int
-		verify		func(key K, hash string) (bool, error)
-		refresh		func(key K) (V, string, error)
+		verify		func(key K, hash *string) (bool, error)
+		refresh		func(key K) (V, *string, error)
 	}
 	
 	cache_hash_item[V any] struct {
 		value		V
-		hash		string
+		hash		*string
 		expires		int64
 	}
 )
@@ -29,8 +29,8 @@ type (
 //	Create new hash cache
 func NewCache_hash[K comparable, V any](
 	ttl int,
-	verify func(key K, hash string) (bool, error),
-	refresh func(key K) (V, string, error),
+	verify func(key K, hash *string) (bool, error),
+	refresh func(key K) (V, *string, error),
 	purge_interval int,
 ) *Cache_hash[K, V] {
 	c := &Cache_hash[K, V]{
