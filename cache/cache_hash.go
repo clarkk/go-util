@@ -64,7 +64,7 @@ func Hash(v any) (*string, error){
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 	if err := enc.Encode(v); err != nil {
-		return "", fmt.Errorf("Binary serialization: %w", err)
+		return nil, fmt.Errorf("Binary serialization: %w", err)
 	}
 	s := hash.SHA256_hex(buf.Bytes())
 	return &s, nil
@@ -103,21 +103,12 @@ func (c *Cache_hash[K, V]) Refresh(key K) (V, error){
 		var zero V
 		return zero, err
 	}
-	if hash == nil {
-		c.items[key] = cache_hash_item[V]{
-			value:		nil,
-			hash:		hash,
-			expires:	time_expires(c.ttl),
-		}
-		return nil, nil
-	} else {
-		c.items[key] = cache_hash_item[V]{
-			value:		value,
-			hash:		hash,
-			expires:	time_expires(c.ttl),
-		}
-		return value, nil
+	c.items[key] = cache_hash_item[V]{
+		value:		value,
+		hash:		hash,
+		expires:	time_expires(c.ttl),
 	}
+	return value, nil
 }
 
 //	Delete value in cache
