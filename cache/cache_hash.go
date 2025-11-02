@@ -72,10 +72,12 @@ func Hash(v any) (*string, error){
 
 //	Get cached value
 func (c *Cache_hash[K, V]) Get(key K) (V, error){
+	fmt.Println("\tget")
 	c.lock.RLock()
 	item, found := c.items[key]
 	//	Cache hit
 	if found && time_unix() <= item.expires {
+		fmt.Println("\tverify")
 		//	Verify hash
 		verified, err := c.verify(key, item.hash)
 		if err != nil {
@@ -84,6 +86,7 @@ func (c *Cache_hash[K, V]) Get(key K) (V, error){
 			return zero, err
 		}
 		if verified {
+			fmt.Println("\tverified")
 			c.lock.RUnlock()
 			return item.value, nil
 		}
@@ -95,6 +98,7 @@ func (c *Cache_hash[K, V]) Get(key K) (V, error){
 
 //	Refresh value in cache
 func (c *Cache_hash[K, V]) Refresh(key K) (V, error){
+	fmt.Println("\trefresh")
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	
