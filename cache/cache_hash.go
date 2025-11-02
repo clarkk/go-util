@@ -56,13 +56,18 @@ func NewCache_hash[K comparable, V any](
 	return c
 }
 
-func Hash(v any) (string, error){
+//	Generate hash of value
+func Hash(v any) (*string, error){
+	if v == nil {
+		return nil, nil
+	}
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 	if err := enc.Encode(v); err != nil {
 		return "", fmt.Errorf("Binary serialization: %w", err)
 	}
-	return hash.SHA256_hex(buf.Bytes()), nil
+	s := hash.SHA256_hex(buf.Bytes())
+	return &s, nil
 }
 
 //	Get cached value
@@ -98,14 +103,24 @@ func (c *Cache_hash[K, V]) Refresh(key K) (V, error){
 		var zero V
 		return zero, err
 	}
-	c.items[key] = cache_hash_item[V]{
-		value:		value,
-		hash:		hash,
-		expires:	time_expires(c.ttl),
+	if hash == nil {
+		c.items[key] = cache_hash_item[V]{
+			value:		nil,
+			hash:		hash,
+			expires:	time_expires(c.ttl),
+		}
+		return nil, nil
+	} else {
+		c.items[key] = cache_hash_item[V]{
+			value:		value,
+			hash:		hash,
+			expires:	time_expires(c.ttl),
+		}
+		return value, nil
 	}
-	return value, nil
 }
 
+//	Delete value in cache
 func (c *Cache_hash[K, V]) Delete(key K){
 	c.lock.Lock()
 	defer c.lock.Unlock()
