@@ -9,9 +9,9 @@ import (
 
 const (
 	ALL Method 		= "*"
-	GET Method		= "GET"
-	POST Method		= "POST"
-	DELETE Method	= "DELETE"
+	GET Method		= http.MethodGet
+	POST Method		= http.MethodPost
+	DELETE Method	= http.MethodDelete
 	
 	pattern_slug	= ":slug"
 	pattern_file 	= ":file"
