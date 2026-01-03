@@ -3,6 +3,7 @@ package rdb
 import (
 	"fmt"
 	"time"
+	"errors"
 	"context"
 	"github.com/redis/go-redis/v9"
 )
@@ -18,11 +19,17 @@ func Connect(host string, port int, auth string){
 	}
 	
 	client = redis.NewClient(&redis.Options{
-		Addr:		fmt.Sprintf("%s:%d", host, port),
-		Password:	auth,
-		DB:			0,
+		Addr:			fmt.Sprintf("%s:%d", host, port),
+		Password:		auth,
+		DB:				0,
+		PoolSize:		10,
+		MinIdleConns:	5,
 	})
-	if _, err := client.Ping(context.Background()).Result(); err != nil {
+	
+	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
+	defer cancel()
+	
+	if err := client.Ping(ctx).Err(); err != nil {
 		panic("Unable to connect to Redis: "+err.Error())
 	}
 	
@@ -66,18 +73,16 @@ func Hgetall(ctx context.Context, key string, ref any) error {
 
 //	Store multiple key-value pairs in hash
 func Hset(ctx context.Context, key string, values any, expire int) error {
-	if err := client.HSet(ctx, key, values).Err(); err != nil {
-		return err
-	}
-	if err := Expire(ctx, key, expire); err != nil {
-		return err
-	}
-	return nil
+	//	Use a pipeline to ensure HSet and Expire are sent in one round trip
+	pipe := client.Pipeline()
+	pipe.HSet(ctx, key, values)
+	pipe.Expire(ctx, key, time_expire(expire))
+	_, err := pipe.Exec(ctx)
+	return err
 }
 
 func Expire(ctx context.Context, key string, expire int) error {
-	status := client.Expire(ctx, key, time_expire(expire))
-	return status.Err()
+	return client.Expire(ctx, key, time_expire(expire)).Err()
 }
 
 //	Delete hash
@@ -88,7 +93,9 @@ func Del(ctx context.Context, key string) error {
 //	Close connection
 func Close() error {
 	if client != nil {
-		return client.Close()
+		err := client.Close()
+		connected = false
+		return err
 	}
 	return nil
 }
@@ -98,5 +105,5 @@ func time_expire(expire int) time.Duration {
 }
 
 func not_found_error(err error) bool {
-	return err != nil && err == redis.Nil
+	return errors.Is(err, redis.Nil)
 }

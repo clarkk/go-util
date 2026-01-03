@@ -150,7 +150,7 @@ func write_gzip(src *os.File, gzip_file string) bool {
 		return false
 	}
 	if err := gw.Close(); err != nil {
-        log.Printf("Log: Unable to close gzip writer: %v", err)
+        log.Printf("Log: Unable to close gzip writer and write the 8-byte trailer (CRC32 and size): %v", err)
         return false
     }
 	return true

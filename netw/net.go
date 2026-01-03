@@ -1,20 +1,23 @@
 package netw
 
 import (
-	"net"
+	"net/netip"
 	"encoding/binary"
 )
 
+//	Converts an IPv4 string to a uint32
 func Ipv4_int(s string) uint32 {
-	ipaddr := net.ParseIP(s).To4()
-	if ipaddr == nil {
+	addr, err := netip.ParseAddr(s)
+	if err != nil || !addr.Is4() {
 		return 0
 	}
-	return binary.BigEndian.Uint32(ipaddr)
+	b := addr.As4()
+	return binary.BigEndian.Uint32(b[:])
 }
 
+//	Converts a uint32 to an IPv4 string
 func Int_ipv4(i uint32) string {
-	ip := make(net.IP, net.IPv4len)
-	binary.BigEndian.PutUint32(ip, i)
-	return ip.String()
+	var b [4]byte
+	binary.BigEndian.PutUint32(b[:], i)
+	return netip.AddrFrom4(b).String()
 }
