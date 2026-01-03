@@ -53,7 +53,7 @@ func Compare(password, hash string) (bool, error){
 		return false, err
 	}
 	actual_hash := generate_hash(password, salt, uint32(time), uint32(memory), uint32(len(hash_compare)))
-	if !subtle.ConstantTimeCompare(hash_compare, actual_hash) == 1 {
+	if subtle.ConstantTimeCompare(hash_compare, actual_hash) == 0 {
 		return false, nil
 	}
 	return true, nil

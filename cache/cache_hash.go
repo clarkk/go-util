@@ -72,7 +72,7 @@ func Hash(v any) (*string, error){
 	buf.Reset()
 	defer buffer_pool.Put(buf)
 	
-	enc := gob.NewEncoder(&buf)
+	enc := gob.NewEncoder(buf)
 	if err := enc.Encode(v); err != nil {
 		return nil, fmt.Errorf("Binary serialization: %w", err)
 	}
