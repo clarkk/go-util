@@ -10,6 +10,12 @@ import (
 	"github.com/clarkk/go-util/hash"
 )
 
+var buffer_pool = sync.Pool{
+    New: func() any {
+        return bytes.NewBuffer(make([]byte, 0, 512))
+    },
+}
+
 type (
 	Cache_hash[K comparable, V any] struct {
 		lock		sync.RWMutex
@@ -61,7 +67,11 @@ func Hash(v any) (*string, error){
 	if v == nil {
 		return nil, nil
 	}
-	var buf bytes.Buffer
+	
+	buf := buffer_pool.Get().(*bytes.Buffer)
+	buf.Reset()
+	defer buffer_pool.Put(buf)
+	
 	enc := gob.NewEncoder(&buf)
 	if err := enc.Encode(v); err != nil {
 		return nil, fmt.Errorf("Binary serialization: %w", err)
