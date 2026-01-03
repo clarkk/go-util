@@ -31,7 +31,7 @@ func Empty_dir(path string) (bool, error){
 		return false, err
 	}
 	defer f.Close()
-	_, err = f.Readdirnames(1)
+	_, err = f.ReadDir(1)
 	if err != nil && errors.Is(err, io.EOF) {
 		return true, nil
 	}

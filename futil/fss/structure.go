@@ -97,29 +97,38 @@ func Purge(path string) error {
 }
 
 //	Compile structured file path from file ID
-func compile(file_id int, path string, min_digits int, create, folder bool) (string, error){
+func compile(file_id int, base_path string, min_digits int, create, folder bool) (string, error){
 	id 		:= strconv.Itoa(file_id)
-	path 	= strings.TrimRight(path, "/")
 	length	:= len(id)
 	
+	var sb strings.Builder
+	sb.WriteString(strings.TrimRight(base_path, "/"))
+	
 	for i := range length {
-		len := length - i
-		if len <= min_digits {
+		remain := length - i
+		if remain <= min_digits {
 			break
 		}
 		
-		digit := string(id[i])
-		if digit == "0" {
+		digit := id[i]
+		if digit == '0' {
 			continue
 		}
 		
 		//	Zero fill right
-		path += "/"+digit+strings.Repeat("0", len-1)
+		sb.WriteByte('/')
+		sb.WriteByte(digit)
+		for range remain - 1 {
+			sb.WriteByte('0')
+		}
 	}
 	
 	if folder {
-		path += "/"+id
+		sb.WriteByte('/')
+		sb.WriteString(id)
 	}
+	
+	path := sb.String()
 	
 	if create {
 		if err := os.MkdirAll(path, futil.CHMOD_RWX_OWNER); err != nil {
