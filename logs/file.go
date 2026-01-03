@@ -40,7 +40,7 @@ func (w *rotate_writer) Write(b []byte) (int, error){
 	w.lock.Lock()
 	defer w.lock.Unlock()
 	
-	finfo, err := os.Stat(w.file)
+	finfo, err := w.f.Stat()
 	if err != nil {
 		log.Printf("Log: Unable to get file stat %s: %v", w.file, err)
 	} else if finfo.Size() > w.max_size {
@@ -50,13 +50,24 @@ func (w *rotate_writer) Write(b []byte) (int, error){
 }
 
 func (w *rotate_writer) rotate(){
-	f, err := os.Open(w.file)
-	if err != nil {
-		log.Printf("Log: Unable to open file (rotation) %s: %v", w.file, err)
+	//	Close the current file before rotating to ensure all buffers are flushed to disk
+	w.f.Close()
+	
+	//	Rename current log to a temporary file to allow immediate recreation of the main log
+	//	This minimizes the "gap" where log lines could be lost
+	temp_src := w.file+".tmp"
+	if err := os.Rename(w.file, temp_src); err != nil {
+		log.Printf("Log: Unable to rename temp file (rotation): %v", err)
+		w.create()	//	Re-open to keep logging
 		return
 	}
-	defer f.Close()
 	
+	//	Immediately recreate the main log file so writes can continue
+	if err := w.create(); err != nil {
+		log.Printf("Log: Unable to recreate log file (rotation): %v", err)
+	}
+	
+	//	Now process the heavy gzip compression in the background or sequentially using the temp file.
 	dir := w.file+".d"
 	if err := os.MkdirAll(dir, perm_dir); err != nil {
 		log.Printf("Log: Unable to create gzip directory (rotation) %s: %v", dir, err)
@@ -68,13 +79,15 @@ func (w *rotate_writer) rotate(){
 		return
 	}
 	
-	if !write_gzip(f, gzip_file) {
+	src_f, err := os.Open(temp_src)
+	if err != nil {
 		return
 	}
+	defer src_f.Close()
 	
-	//	Truncate log file
-	w.f.Truncate(0)
-	w.f.Seek(0,0)
+	if write_gzip(src_f, gzip_file) {
+		os.Remove(temp_src)
+	}
 }
 
 func (w *rotate_writer) compile_gzip_filename(dir string) (string, bool){
@@ -89,9 +102,13 @@ func (w *rotate_writer) compile_gzip_filename(dir string) (string, bool){
 	}
 	list := make([]int, length)
 	for k, file := range entries {
-		file = file[:len(file) - 3]
-		pos := strings.LastIndex(file, ".") + 1
-		i, err := strconv.Atoi(file[pos:])
+		name := filepath.Base(file)
+		name = strings.TrimSuffix(name, ".gz")
+		parts := strings.Split(name, ".")
+		if len(parts) < 2 {
+			continue
+		}
+		i, err := strconv.Atoi(parts[len(parts)-1])
 		if err != nil {
 			log.Printf("Log: Unable to compile gzip file name (rotation) %s: %v", dir, err)
 			return "", false
@@ -114,23 +131,27 @@ func (w *rotate_writer) gzip_filename(dir string, i int) string {
 }
 
 func write_gzip(src *os.File, gzip_file string) bool {
-	f, err := os.Create(gzip_file)
+	f, err := os.OpenFile(gzip_file, os.O_CREATE | os.O_WRONLY | os.O_EXCL, perm_file)
 	if err != nil {
 		log.Printf("Log: Unable to create gzip file (rotation) %s: %v", gzip_file, err)
 		return false
 	}
 	defer f.Close()
-	w, err := gzip.NewWriterLevel(f, gzip.BestCompression)
+	gw, err := gzip.NewWriterLevel(f, gzip.BestCompression)
 	if err != nil {
 		log.Printf("Log: Unable to write gzip file (rotation) %s: %v", gzip_file, err)
 		os.Remove(gzip_file)
 		return false
 	}
-	if _, err = io.Copy(w, src); err != nil {
+	if _, err = io.Copy(gw, src); err != nil {
+		gw.Close()
 		log.Printf("Log: Unable to copy file (rotation) %s: %v", gzip_file, err)
 		os.Remove(gzip_file)
 		return false
 	}
-	w.Close()
+	if err := gw.Close(); err != nil {
+        log.Printf("Log: Unable to close gzip writer: %v", err)
+        return false
+    }
 	return true
 }
