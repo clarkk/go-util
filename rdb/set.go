@@ -1,16 +1,12 @@
 package rdb
 
-import (
-	"context"
-)
+import "context"
 
 //	Store members in set
 func Sadd(ctx context.Context, key string, values []any, expire int) error {
-	if err := client.SAdd(ctx, key, values...).Err(); err != nil {
-		return err
-	}
-	if err := Expire(ctx, key, expire); err != nil {
-		return err
-	}
-	return nil
+	pipe := client.Pipeline()
+	pipe.SAdd(ctx, key, values...)
+	pipe.Expire(ctx, key, time_expire(expire))
+	_, err := pipe.Exec(ctx)
+	return err
 }
