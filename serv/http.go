@@ -11,6 +11,7 @@ import (
 	"strings"
 	"context"
 	"runtime"
+	"syscall"
 	"net/http"
 	"github.com/go-errors/errors"
 	"github.com/clarkk/go-util/cmd"
@@ -19,7 +20,7 @@ import (
 const ctx_slug ctx_key = ""
 
 var (
-	re_sld			= regexp.MustCompile(`^[a-z]+(?:[a-z-]+[a-z]+)?\.$`)
+	re_sld			= regexp.MustCompile(`^[a-z0-9]+(?:[a-z0-9-]*[a-z0-9]+)?\.$`)
 	re_path_prefix	= regexp.MustCompile(`^/[a-z]+$`)
 )
 
@@ -53,7 +54,7 @@ func NewHTTP(tld, listen_ip string, listen_port int) *HTTP {
 //	Recover from panic inside route handler
 func Recover(w http.ResponseWriter){
 	if err := recover(); err != nil {
-		if !w.(*Writer).Sent_header() {
+		if rw, ok := w.(*Writer); ok && !rw.Sent_header() {
 			http.Error(w, "Unexpected error", http.StatusInternalServerError)
 		}
 		log.Println(errors.Wrap(err, 2).ErrorStack())
@@ -149,7 +150,7 @@ func (h *HTTP) Run(){
 	
 	//	Listening for SIGINT to shutdown gracefully (stop accepting new connections/requests): CTRL+C or "kill -INT $pid"
 	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 	<-quit
 	
 	cmd.Out("HTTP server received SIGINT to shutdown gracefully")
@@ -244,10 +245,14 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request){
 		
 		//	Wait until the context is done/canceled/timeout
 		select {
+		case <-done:
+			//	Request finished normally
 		case <-ctx.Done():
 			//	Return HTTP 408 Timeout if request reached timeout
 			if ctx.Err() == context.DeadlineExceeded {
-				http.Error(w, http.StatusText(http.StatusRequestTimeout), http.StatusRequestTimeout)
+				if rw, ok := w.(*Writer); ok && !rw.Sent_header() {
+					http.Error(w, http.StatusText(http.StatusRequestTimeout), http.StatusRequestTimeout)
+				}
 			}
 		}
 	} else {
