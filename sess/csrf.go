@@ -43,7 +43,7 @@ func Verify_CSRF(r *http.Request) bool {
 		return true
 	}
 	
-	return true
+	return false
 }
 
 func (s *Session) Generate_CSRF(){
