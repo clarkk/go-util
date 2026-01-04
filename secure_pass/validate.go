@@ -26,19 +26,11 @@ func Entropy(s string) bool {
 			has_digit = true
 		case unicode.IsLetter(char):
 			has_letter = true
-		case contains_rune(SPECIAL_CHAR, char):
+		case strings.ContainsRune(SPECIAL_CHAR, char):
 			has_special = true
 		}
-	}
-	if has_digit && has_letter && has_special {
-		return true
-	}
-	return false
-}
-
-func contains_rune(s string, r rune) bool {
-	for _, char := range s {
-		if char == r {
+		
+		if has_digit && has_letter && has_special {
 			return true
 		}
 	}
