@@ -1,7 +1,6 @@
 package serv
 
 import (
-	"fmt"
 	"log"
 	"slices"
 	"strings"
@@ -128,8 +127,6 @@ func (s *subhost) sort_priority(){
 		b_length	:= len(b.slugs)
 		min_length	:= min(a_length, b_length)
 		
-		fmt.Printf("\nsort\nA: %s\nB: %s", a.string(), b.string())
-		
 		for i := range min_length {
 			a_slug := a.slugs[i]
 			b_slug := b.slugs[i]
@@ -137,46 +134,48 @@ func (s *subhost) sort_priority(){
 			a_dynamic := strings.HasPrefix(a_slug, ":")
 			b_dynamic := strings.HasPrefix(b_slug, ":")
 			
-			fmt.Printf("\nslug:\n\tA: %s\n\tB: %s\n", a_slug, b_slug)
+			if a_slug == b_slug {
+				continue
+			}
 			
-			//	Same type dynamic/static
+			//	Same type (dynamic/static)
 			if a_dynamic == b_dynamic {
-				//	Alpha sort
-				if a_slug != b_slug {
-					fmt.Println("\talpha sort")
-					return strings.Compare(a_slug, b_slug)
+				//	Both dynamic
+				if a_dynamic {
+					//	:file comes first
+					if a_slug == pattern_file {
+						return -1
+					}
+					if b_slug == pattern_file {
+						return 1
+					}
 				}
+				
+				//	Alphabetical sort
+				return strings.Compare(a_slug, b_slug)
 			} else {
-				//	Static slugs come first
-				if a_dynamic && !b_dynamic {
-					fmt.Println("\tB static")
-					return 1
-				}
+				//	Static comes first
 				if !a_dynamic && b_dynamic {
-					fmt.Println("\tA static")
 					return -1
+				}
+				if a_dynamic && !b_dynamic {
+					return 1
 				}
 			}
 		}
 		
-		fmt.Println("loop end")
-		
 		//	Deeper path comes first
 		if a_length != b_length {
-			fmt.Println("path depth")
 			return b_length - a_length
 		}
 		
 		//	Extact paths come first
 		if a.exact != b.exact {
 			if a.exact {
-				fmt.Println("A exact")
 				return -1
 			}
-			fmt.Println("B exact")
 			return 1
 		}
-		fmt.Println("equal end")
 		return 0
 	})
 }

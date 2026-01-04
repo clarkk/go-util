@@ -226,7 +226,7 @@ func Test_priority_routing(t *testing.T){
 			Route_exact(GET, "/get/test/path", 0, handler).
 			Route(GET, "/get/test", 0, handler).
 			Route(GET, "/post/", 0, handler).
-			Route(GET, "/regex/:slug", 0, handler).
+			Route_exact(GET, "/regex/:slug", 0, handler).
 			Route(GET, "/regex-post/:slug", 0, handler).
 			Route(GET, "/", 0, handler)
 	
@@ -240,18 +240,18 @@ func Test_priority_routing(t *testing.T){
 	
 	want := []string{
 		"=/blind/base/test",
-		"=/get/test/path",
+		" /blind",
 		"=/file/file.json",
+		" /file",
+		"=/get/test/path",
 		" /get/test",
-		"=/regex/"+re_file_pattern,
-		" /regex-post/"+re_slug_pattern,
+		" /get",
+		" /post",
 		" /regex/slug/path",
 		" /regex/slug",
-		" /regex/"+re_slug_pattern,
-		" /blind",
-		" /get",
-		" /file",
-		" /post",
+		"^/regex/"+re_file_pattern+"$",
+		"^/regex/"+re_slug_pattern+"$",
+		"^/regex-post/"+re_slug_pattern,
 		" /",
 	}
 	
