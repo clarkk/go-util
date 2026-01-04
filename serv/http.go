@@ -237,10 +237,11 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request){
 		ctx, cancel = context.WithTimeout(ctx, time.Duration(match_route.timeout) * time.Second)
 		defer cancel()
 		
+		done := make(chan struct{})
 		go func(){
 			//	Serve HTTP request to client
 			match_route.handler(w, r.WithContext(ctx))
-			cancel()
+			close(done)
 		}()
 		
 		//	Wait until the context is done/canceled/timeout
