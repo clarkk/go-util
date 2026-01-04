@@ -74,7 +74,7 @@ func Get_slug(r *http.Request, index int) string {
 }
 
 func (h *HTTP) Test(){
-	cmd.Out("HTTP server in test-mode")
+	cmd.Out("HTTP server in test mode")
 	h.test = true
 }
 
@@ -116,6 +116,13 @@ func (h *HTTP) Subhost_path_prefix(sld, path_prefix string) *subhost {
 //	Start server
 func (h *HTTP) Run(){
 	h.output_init()
+	
+	for sld, s := range h.subhosts {
+		if s.priority_routing {
+			s.sort_priority()
+			h.output_sort_priority(sld)
+		}
+	}
 	
 	srv := &http.Server{
 		Addr:				fmt.Sprintf("%s:%d", h.listen_ip, h.listen_port),
@@ -272,7 +279,7 @@ func (h *HTTP) output_init(){
 		for _, route := range s.routes {
 			var pattern string
 			if route.regex != nil {
-				pattern = fmt.Sprintf("%s", route.regex)
+				pattern = route.regex.String()
 			} else {
 				pattern = route.pattern
 				if route.exact {
@@ -301,6 +308,22 @@ func (h *HTTP) output_init(){
 		runtime.GOMAXPROCS(0),
 		usr.Username,
 	)
+}
+
+func (h *HTTP) output_sort_priority(sld string){
+	cmd.Outf("HTTP subhost in priority routing mode: %s", sld)
+	for _, route := range h.subhosts[sld].routes {
+		var pattern string
+		if route.regex != nil {
+			pattern = route.regex.String()
+		} else {
+			pattern = route.pattern
+			if route.exact {
+				pattern = "="+pattern
+			}
+		}
+		cmd.Out(pattern)
+	}
 }
 
 //	If HTTP server fails to start check which PID is occupying the port

@@ -2,6 +2,7 @@ package serv
 
 import (
 	"log"
+	"slices"
 	"strings"
 	"regexp"
 	"net/http"
@@ -28,10 +29,11 @@ type (
 	Method 			string
 	
 	subhost struct {
-		path_prefix	string
-		map_routes 	map_routes
-		map_exact	map_exact
-		routes 		routes
+		path_prefix			string
+		map_routes 			map_routes
+		map_exact			map_exact
+		routes 				routes
+		priority_routing	bool
 	}
 	
 	map_routes 		map[string]route_handlers
@@ -59,6 +61,11 @@ type (
 		handler		http.HandlerFunc
 	}
 )
+
+func (s *subhost) Priority_routing() *subhost {
+	s.priority_routing = true
+	return s
+}
 
 //	Apply route pattern exact
 func (s *subhost) Route_exact(method Method, pattern string, timeout int, handler http.HandlerFunc) *subhost {
@@ -112,6 +119,50 @@ func (s *subhost) route(method Method, pattern string, timeout int, handler http
 	}
 	
 	return s
+}
+
+func (s *subhost) sort_priority(){
+	slices.SortFunc(s.routes, func(a, b *route) int {
+		a_length	:= len(a.slugs)
+		b_length	:= len(b.slugs)
+		min_length	:= min(a_length, b_length)
+		
+		for i := range min_length {
+			a_slug := a.slugs[i]
+			b_slug := b.slugs[i]
+			
+			a_dynamic := strings.HasPrefix(a_slug, ":")
+			b_dynamic := strings.HasPrefix(b_slug, ":")
+			
+			//	b (static) comes first
+			if a_dynamic && !b_dynamic {
+				return 1
+			}
+			//	a (static) comes first
+			if !a_dynamic && b_dynamic {
+				return -1
+			}
+			
+			if !a_dynamic && !b_dynamic && a_slug != b_slug {
+				return strings.Compare(a_slug, b_slug)
+			}
+		}
+		
+		//	If both match up to minimum length the deeper path comes first
+		if a_length != b_length {
+			return b_length - a_length
+		}
+		
+		//	If both paths are equal exact comes first
+		if a.exact != b.exact {
+			if a.exact {
+				return -1
+			}
+			return 1
+		}
+		
+		return 0
+	})
 }
 
 func (s *subhost) validate_existing_route(method Method, pattern string, exact bool, existing_route route_handlers){
