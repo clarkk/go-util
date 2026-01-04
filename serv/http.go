@@ -277,17 +277,7 @@ func (h *HTTP) output_init(){
 	for sld, s := range h.subhosts {
 		cmd.Outf("%s%s (Routes: %d)\n", sld, h.tld, len(s.routes))
 		for _, route := range s.routes {
-			var pattern string
-			if route.regex != nil {
-				pattern = route.regex.String()
-			} else {
-				pattern = route.pattern
-				if route.exact {
-					pattern = "="+pattern
-				}
-			}
-			
-			cmd.Out(pattern)
+			cmd.Out(route.string())
 			for method, handler := range route.methods {
 				if handler.blind {
 					cmd.Outf("\t%s HTTP 404\n", method)
@@ -313,16 +303,7 @@ func (h *HTTP) output_init(){
 func (h *HTTP) output_sort_priority(sld string){
 	cmd.Outf("HTTP subhost in priority routing mode: %s", sld)
 	for _, route := range h.subhosts[sld].routes {
-		var pattern string
-		if route.regex != nil {
-			pattern = route.regex.String()
-		} else {
-			pattern = route.pattern
-			if route.exact {
-				pattern = "="+pattern
-			}
-		}
-		cmd.Out(pattern)
+		cmd.Out(route.string())
 	}
 }
 

@@ -2,6 +2,7 @@ package serv
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"net/http"
 	"net/http/httptest"
@@ -204,6 +205,58 @@ func Test_routes(t *testing.T){
 				)
 			}
 		})
+	}
+}
+
+func Test_priority_routing(t *testing.T){
+	h := NewHTTP(tld, "", 0)
+	
+	handler := func(w http.ResponseWriter, r *http.Request){}
+	
+	h.Subhost(sld).
+		Priority_routing().
+			Route_exact(GET, "/file/file.json", 0, handler).
+			Route(GET, "/file", 0, handler).
+			Route_exact(GET, "/regex/:file", 0, handler).
+			Route_exact(GET, "/blind/base/test", 0, handler).
+			Route(GET, "/regex/slug", 0, handler).
+			Route_blind(GET, "/blind").
+			Route(GET, "/get", 0, handler).
+			Route(GET, "/regex/slug/path", 0, handler).
+			Route_exact(GET, "/get/test/path", 0, handler).
+			Route(GET, "/get/test", 0, handler).
+			Route(GET, "/post/", 0, handler).
+			Route(GET, "/regex/:slug", 0, handler).
+			Route(GET, "/regex-post/:slug", 0, handler).
+			Route(GET, "/", 0, handler)
+	
+	s := h.subhosts[sld]
+	s.sort_priority()
+	
+	var got []string
+	for _, route := range s.routes {
+		got = append(got, route.string())
+	}
+	
+	want := []string{
+		"=/blind/base/test",
+		"=/get/test/path",
+		"=/file/file.json",
+		" /get/test",
+		"=/regex/"+re_file_pattern,
+		" /regex-post/"+re_slug_pattern,
+		" /regex/slug/path",
+		" /regex/slug",
+		" /regex/"+re_slug_pattern,
+		" /blind",
+		" /get",
+		" /file",
+		" /post",
+		" /",
+	}
+	
+	if !slices.Equal(want, got) {
+		t.Fatalf("Failed to sort priority routes\nwant:\n%s\ngot:\n%s", strings.Join(want, "\n"), strings.Join(got, "\n"))
 	}
 }
 

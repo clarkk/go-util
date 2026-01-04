@@ -1,6 +1,7 @@
 package serv
 
 import (
+	"fmt"
 	"log"
 	"slices"
 	"strings"
@@ -127,6 +128,8 @@ func (s *subhost) sort_priority(){
 		b_length	:= len(b.slugs)
 		min_length	:= min(a_length, b_length)
 		
+		fmt.Printf("\nsort\nA: %s\nB: %s", a.string(), b.string())
+		
 		for i := range min_length {
 			a_slug := a.slugs[i]
 			b_slug := b.slugs[i]
@@ -134,33 +137,46 @@ func (s *subhost) sort_priority(){
 			a_dynamic := strings.HasPrefix(a_slug, ":")
 			b_dynamic := strings.HasPrefix(b_slug, ":")
 			
-			//	b (static) comes first
-			if a_dynamic && !b_dynamic {
-				return 1
-			}
-			//	a (static) comes first
-			if !a_dynamic && b_dynamic {
-				return -1
-			}
+			fmt.Printf("\nslug:\n\tA: %s\n\tB: %s\n", a_slug, b_slug)
 			
-			if !a_dynamic && !b_dynamic && a_slug != b_slug {
-				return strings.Compare(a_slug, b_slug)
+			//	Same type dynamic/static
+			if a_dynamic == b_dynamic {
+				//	Alpha sort
+				if a_slug != b_slug {
+					fmt.Println("\talpha sort")
+					return strings.Compare(a_slug, b_slug)
+				}
+			} else {
+				//	Static slugs come first
+				if a_dynamic && !b_dynamic {
+					fmt.Println("\tB static")
+					return 1
+				}
+				if !a_dynamic && b_dynamic {
+					fmt.Println("\tA static")
+					return -1
+				}
 			}
 		}
 		
-		//	If both match up to minimum length the deeper path comes first
+		fmt.Println("loop end")
+		
+		//	Deeper path comes first
 		if a_length != b_length {
+			fmt.Println("path depth")
 			return b_length - a_length
 		}
 		
-		//	If both paths are equal exact comes first
+		//	Extact paths come first
 		if a.exact != b.exact {
 			if a.exact {
+				fmt.Println("A exact")
 				return -1
 			}
+			fmt.Println("B exact")
 			return 1
 		}
-		
+		fmt.Println("equal end")
 		return 0
 	})
 }
@@ -179,6 +195,16 @@ func (s *subhost) validate_existing_route(method Method, pattern string, exact b
 	if s.map_exact[pattern] != exact {
 		log.Fatal("Routes with exact/prefix can not be mixed")
 	}
+}
+
+func (r *route) string() string {
+	if r.regex != nil {
+		return r.regex.String()
+	}
+	if r.exact {
+		return "="+r.pattern
+	}
+	return " "+r.pattern
 }
 
 func parse_route_pattern(pattern string, exact bool) route_pattern {
