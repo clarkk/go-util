@@ -331,7 +331,7 @@ func wrap_session(s *session) *Session {
 
 func set_cookie(w http.ResponseWriter) string {
 	sid := uuid_string()
-	serv.Set_cookie(w, session_cookie_name, sid, 0)
+	serv.Set_cookie_session(w, session_cookie_name, sid)
 	return sid
 }
 

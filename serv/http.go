@@ -170,6 +170,7 @@ func (h *HTTP) Run(){
 //	Subhost and route pattern handler
 func (h *HTTP) serve(w http.ResponseWriter, r *http.Request){
 	w = NewWriter(w)
+	defer Recover(w)
 	
 	if !strings.HasSuffix(r.Host, h.tld) || r.Host == h.tld {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
@@ -190,8 +191,8 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request){
 	
 	var match_route *route_handler
 	for _, route := range s.routes {
+		//	Regex pattern
 		if route.regex != nil {
-			//	Regex pattern
 			matches := route.regex.FindStringSubmatch(path)
 			len 	:= len(matches)
 			if len > 0 {
@@ -212,8 +213,8 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request){
 				match_route = handler
 				break
 			}
+		//	Path
 		} else {
-			//	Path
 			if match_path(path, route) {
 				handler, ok := match_method(route, w, r)
 				if !ok {
@@ -239,6 +240,8 @@ func (h *HTTP) serve(w http.ResponseWriter, r *http.Request){
 		
 		done := make(chan struct{})
 		go func(){
+			defer Recover(w)
+			
 			//	Serve HTTP request to client
 			match_route.handler(w, r.WithContext(ctx))
 			close(done)

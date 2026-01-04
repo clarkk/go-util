@@ -275,10 +275,6 @@ import (
 func adapt_method1() serv.Adapter {
   return func(h http.HandlerFunc) http.HandlerFunc {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
-      //  This recover method must be called in the first chained handler
-      //  in every route to prevent the server from crashing in case of a panic
-      defer serv.Recover(w)
-      
       //  This handler is executed in a chain before the main HTTP handler
       
       fmt.Println("Method1 executed")
@@ -348,10 +344,6 @@ func main(){
 ## Accepts all HTTP methods (GET, POST, DELETE, etc.) with 60 second timeout
 ```
 Route(serv.ALL, "/", 60, func(w http.ResponseWriter, r *http.Request){
-  //  This recover method must be called in the first chained handler
-  //  in every route to prevent the server from crashing in case of a panic
-  defer serv.Recover(w)
-  
   path, slugs := serv.Get_path_slugs(r, "")
   fmt.Println("path:", path)
   fmt.Println("slugs:", slugs)
@@ -363,10 +355,6 @@ Route(serv.ALL, "/", 60, func(w http.ResponseWriter, r *http.Request){
 ## Accepts only HTTP POST with 120 second timeout
 ```
 Route(serv.POST, "/post", 120, func(w http.ResponseWriter, r *http.Request){
-  //  This recover method must be called in the first chained handler
-  //  in every route to prevent the server from crashing in case of a panic
-  defer serv.Recover(w)
-  
   io.WriteString(w, "This route only accepts POST methods!")
 })
 ```
@@ -374,10 +362,6 @@ Route(serv.POST, "/post", 120, func(w http.ResponseWriter, r *http.Request){
 ## Accepts only HTTP GET and only matches the exact pattern with 60 second timeout
 ```
 Route_exact(serv.GET, "/exact-url/file.ext", 60, func(w http.ResponseWriter, r *http.Request){
-  //  This recover method must be called in the first chained handler
-  //  in every route to prevent the server from crashing in case of a panic
-  defer serv.Recover(w)
-  
   io.WriteString(w, "This route is exact!")
 })
 ```
@@ -392,10 +376,6 @@ Route_blind(serv.GET, "/http404")
 ### Placeholder for slugs
 ```
 Route(serv.ALL, "/base_path/:slug/test/:slug", 60, func(w http.ResponseWriter, r *http.Request){
-  //  This recover method must be called in the first chained handler
-  //  in every route to prevent the server from crashing in case of a panic
-  defer serv.Recover(w)
-  
   slug1 := serv.Get_slug(r, 0)
   slug2 := serv.Get_slug(r, 1)
   
@@ -407,10 +387,6 @@ Route(serv.ALL, "/base_path/:slug/test/:slug", 60, func(w http.ResponseWriter, r
 Matches all files in the given directory
 ```
 Route_exact(serv.ALL, "/base_path/:file", 60, func(w http.ResponseWriter, r *http.Request){
-  //  This recover method must be called in the first chained handler
-  //  in every route to prevent the server from crashing in case of a panic
-  defer serv.Recover(w)
-  
   io.WriteString(w, "This is a file!")
 })
 ```
@@ -421,10 +397,6 @@ Route_exact(serv.ALL, "/base_path/:file", 60, func(w http.ResponseWriter, r *htt
 func adapt_auth() serv.Adapter {
   return func(h http.HandlerFunc) http.HandlerFunc {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
-      //  This recover method must be called in the first chained handler
-      //  in every route to prevent the server from crashing in case of a panic
-      defer serv.Recover(w)
-      
       //  Verify Auth Basic
       if !serv.Auth_basic(AUTH_USER, AUTH_PASS) {
         io.WriteString(w, "No access!")
@@ -473,8 +445,6 @@ sess_purge_expired = 60
 sess.Init(sess_expires, sess_cookie_name, sess_redis_prefix, sess_purge_expired)
 
 h.Route(serv.ALL, "/", 60, func(w http.ResponseWriter, r *http.Request){
-  defer serv.Recover(w)
-  
   //  Start session (with read-lock)
   s, err := sess.Start(w, r)
   if err != nil {
@@ -500,8 +470,6 @@ h.Route(serv.ALL, "/", 60, func(w http.ResponseWriter, r *http.Request){
 ## Login (start, regenerate session id and close)
 ```
 h.Route(serv.ALL, "/", func(w http.ResponseWriter, r *http.Request){
-  defer serv.Recover(w)
-  
   //  Start session (with read-lock)
   s, err := sess.Start(w, r)
   if err != nil {
@@ -526,8 +494,6 @@ h.Route(serv.ALL, "/", func(w http.ResponseWriter, r *http.Request){
 ## Logout (start and destroy session)
 ```
 h.Route(serv.ALL, "/", func(w http.ResponseWriter, r *http.Request){
-  defer serv.Recover(w)
-  
   //  Start session (with read-lock)
   s, err := sess.Start(w, r)
   if err != nil {
@@ -545,8 +511,6 @@ h.Route(serv.ALL, "/", func(w http.ResponseWriter, r *http.Request){
 ## Start, write and close
 ```
 h.Route(serv.ALL, "/", func(w http.ResponseWriter, r *http.Request){
-  defer serv.Recover(w)
-  
   //  Start session with read-lock
   s, err := sess.Start(w, r)
   if err != nil {
