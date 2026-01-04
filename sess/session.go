@@ -283,6 +283,7 @@ func fetch_session(ctx context.Context, sid string) (*session, error){
 		//	Copy and use remote session
 		s := create_session(sid)
 		if err := json.Unmarshal([]byte(remote), &s.data); err != nil {
+			s.lock.Unlock()
 			panic("Session remote fetch JSON decode: "+err.Error())
 		}
 		return s, nil
@@ -292,6 +293,12 @@ func fetch_session(ctx context.Context, sid string) (*session, error){
 }
 
 func update_remote_session(ctx context.Context, s *session){
+	defer func(){
+		if r := recover(); r != nil {
+			log.Printf("update_remote_session panic: %v", r)
+		}
+	}()
+	
 	b, err := json.Marshal(s.data)
 	if err != nil {
 		panic("Session remote update JSON encode: "+err.Error())

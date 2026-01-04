@@ -9,8 +9,8 @@ type pool struct {
 
 func (p *pool) get(sid string) (*session, bool){
 	p.lock.RLock()
-	defer p.lock.RUnlock()
 	s, ok := p.sessions[sid]
+	p.lock.RUnlock()
 	if !ok {
 		return nil, false
 	}
@@ -36,7 +36,7 @@ func (p *pool) delete(sid string){
 }
 
 func (p *pool) purge_expired(){
-	if ok := p.lock.TryLock(); !ok {
+	if !p.lock.TryLock() {
 		return
 	}
 	defer p.lock.Unlock()

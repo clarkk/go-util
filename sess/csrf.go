@@ -3,6 +3,7 @@ package sess
 import (
 	"net/url"
 	"net/http"
+	"crypto/subtle"
 	"github.com/clarkk/go-util/hash"
 	"github.com/clarkk/go-util/serv"
 )
@@ -30,8 +31,12 @@ func Verify_CSRF(r *http.Request) bool {
 		return false
 	}
 	
-	token := s.csrf_token()
-	if token == "" || token != header_csrf {
+	session_token := s.csrf_token()
+	if session_token == "" {
+		return false
+	}
+	
+	if subtle.ConstantTimeCompare([]byte(session_token), []byte(header_csrf)) != 1 {
 		return false
 	}
 	
@@ -62,6 +67,9 @@ func (s *Session) generate_CSRF() (token string){
 }
 
 func verify_origin(header_url string) bool {
+	if header_url == "" {
+		return false
+	}
 	parsed_url, err := url.Parse(header_url)
 	if err != nil {
 		return false
