@@ -1,6 +1,9 @@
 package secure_pass
 
-import "unicode"
+import (
+	"unicode"
+	"strings"
+)
 
 const (
 	MIN_LENGTH		= 12
