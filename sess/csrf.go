@@ -1,7 +1,6 @@
 package sess
 
 import (
-	"fmt"
 	"net/url"
 	"net/http"
 	"github.com/clarkk/go-util/hash"
@@ -30,13 +29,12 @@ func Verify_CSRF(r *http.Request) bool {
 	if header_csrf == "" {
 		return false
 	}
-	fmt.Println("header_csrf:", header_csrf)
+	
 	token := s.csrf_token()
-	fmt.Println("token:", token)
 	if token == "" || token != header_csrf {
 		return false
 	}
-	fmt.Println("token OK!")
+	
 	if verify_origin(r.Header.Get("Origin")) {
 		return true
 	}
@@ -64,16 +62,12 @@ func (s *Session) generate_CSRF() (token string){
 }
 
 func verify_origin(header_url string) bool {
-	fmt.Println("header empty!")
 	if header_url == "" {
 		return false
 	}
-	fmt.Println(header_url)
 	parsed_url, err := url.Parse(header_url)
 	if err != nil {
 		return false
 	}
-	fmt.Println(parsed_url)
-	fmt.Println(csrf_origin, parsed_url.Host)
 	return csrf_origin == parsed_url.Host
 }
