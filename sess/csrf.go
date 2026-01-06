@@ -36,7 +36,7 @@ func Verify_CSRF(r *http.Request) bool {
 	if token == "" || token != header_csrf {
 		return false
 	}
-	
+	fmt.Println("token OK!")
 	if verify_origin(r.Header.Get("Origin")) {
 		return true
 	}
@@ -64,6 +64,7 @@ func (s *Session) generate_CSRF() (token string){
 }
 
 func verify_origin(header_url string) bool {
+	fmt.Println("header empty!")
 	if header_url == "" {
 		return false
 	}
