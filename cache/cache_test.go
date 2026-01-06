@@ -15,7 +15,7 @@ func Test_cache(t *testing.T){
 	var wg sync.WaitGroup
 	
 	purge_interval 	:= 60
-	c := New[any](purge_interval)
+	c := NewCache[string, string](purge_interval)
 	
 	_, ok := c.Get("TEST1")
 	if ok != false {

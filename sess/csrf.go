@@ -1,6 +1,7 @@
 package sess
 
 import (
+	"fmt"
 	"net/url"
 	"net/http"
 	"github.com/clarkk/go-util/hash"
@@ -65,9 +66,12 @@ func verify_origin(header_url string) bool {
 	if header_url == "" {
 		return false
 	}
+	fmt.Println(header_url)
 	parsed_url, err := url.Parse(header_url)
 	if err != nil {
 		return false
 	}
+	fmt.Println(parsed_url)
+	fmt.Println(csrf_origin, parsed_url.Host)
 	return csrf_origin == parsed_url.Host
 }
