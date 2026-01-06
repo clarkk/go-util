@@ -30,8 +30,9 @@ func Verify_CSRF(r *http.Request) bool {
 	if header_csrf == "" {
 		return false
 	}
-	
+	fmt.Println("header_csrf:", header_csrf)
 	token := s.csrf_token()
+	fmt.Println("token:", token)
 	if token == "" || token != header_csrf {
 		return false
 	}
