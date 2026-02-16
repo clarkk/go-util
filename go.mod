@@ -1,6 +1,6 @@
 module github.com/clarkk/go-util
 
-go 1.25.1
+go 1.26.0
 
 require (
 	github.com/go-errors/errors v1.5.1
