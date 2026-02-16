@@ -4,7 +4,7 @@ import (
 	"io"
 	"time"
 	"net/http"
-	"github.com/go-json-experiment/json"
+	"encoding/json/v2"
 )
 
 func Curl_JSON(url string, input any, timeout int) (int, error){

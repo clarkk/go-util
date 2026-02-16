@@ -7,8 +7,8 @@ import (
 	"time"
 	"context"
 	"net/http"
+	"encoding/json/v2"
 	"github.com/google/uuid"
-	"github.com/go-json-experiment/json"
 	"github.com/clarkk/go-util/rdb"
 	"github.com/clarkk/go-util/serv"
 )
