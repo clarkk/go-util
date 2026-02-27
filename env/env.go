@@ -57,13 +57,6 @@ func Request(r *http.Request) *Environment {
 	return nil
 }
 
-func Validate_lang(v any) error {
-	if _, ok := v.(string); !ok {
-		return Type_error("lang", v)
-	}
-	return nil
-}
-
 func Fatal_log(err error) error {
 	log.Printf("env data: %v", err)
 	return err
