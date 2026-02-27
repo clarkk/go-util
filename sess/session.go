@@ -124,10 +124,8 @@ func Start(w http.ResponseWriter, r *http.Request) (*Session, error){
 
 //	Fetch session from request context
 func Request(r *http.Request) *Session {
-	if s, ok := r.Context().Value(ctx_sess).(*Session); ok {
-		return s
-	}
-	return nil
+	s, _ := r.Context().Value(ctx_sess).(*Session)
+	return s
 }
 
 //	Regenerate session id

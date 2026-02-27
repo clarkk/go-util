@@ -51,23 +51,8 @@ func New_request(r *http.Request, d Env_data) *Environment {
 }
 
 func Request(r *http.Request) *Environment {
-	if e, ok := r.Context().Value(ctx_env).(*Environment); ok {
-		return e
-	}
-	return nil
-}
-
-func Fatal_log(err error) error {
-	log.Printf("env data: %v", err)
-	return err
-}
-
-func Key_error(key string) error {
-	return fmt.Errorf("Invalid env key: %s", key)
-}
-
-func Type_error(key string, value any) error {
-	return fmt.Errorf("Invalid env key type: %s (%T)", key, value)
+	e, _ := r.Context().Value(ctx_env).(*Environment)
+	return e
 }
 
 func (e *Environment) Lang() string {
@@ -84,4 +69,17 @@ func (e *Environment) Lang_error(key string, replace map[string]any) error {
 
 func (e *Environment) Lang_printer() *lang.Printer {
 	return e.lang.Printer()
+}
+
+func Fatal_log(err error) error {
+	log.Printf("env: %v", err)
+	return err
+}
+
+func Key_error(key string) error {
+	return fmt.Errorf("Invalid env key: %s", key)
+}
+
+func Type_error(key string, value any) error {
+	return fmt.Errorf("Invalid env key type: %s (%T)", key, value)
 }
