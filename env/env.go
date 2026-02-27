@@ -71,6 +71,22 @@ func (e *Environment) Lang_printer() *lang.Printer {
 	return e.lang.Printer()
 }
 
+func Assign_uint64(k string, v any, target *uint64) error {
+	switch t := v.(type) {
+	case float64:
+		*target = uint64(t)
+	case uint64:
+		*target = t
+	default:
+		return Fatal_log(Type_error(k, v))
+	}
+	return nil
+}
+
+func Read_only(k string) error {
+	return Fatal_log(fmt.Errorf("Can not change %s after init", k))
+}
+
 func Extract_lang(p map[string]any) (string, error){
 	lang, ok := p["lang"]
 	if !ok {
@@ -85,7 +101,7 @@ func Extract_lang(p map[string]any) (string, error){
 }
 
 func Fatal_log(err error) error {
-	log.Printf("env: %v", err)
+	log.Printf("Env: %v", err)
 	return err
 }
 
