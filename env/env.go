@@ -15,7 +15,7 @@ type (
 		Session() *sess.Session
 		Lang() string
 		Data() Properties
-		Data_lang() Properties
+		Data_session() Properties
 		Update(map[string]any) error
 	}
 	
