@@ -14,6 +14,7 @@ type (
 	Env_data interface {
 		Session() *sess.Session
 		Lang() string
+		Data() Properties
 		Data_lang() Properties
 		Update(map[string]any) error
 	}
