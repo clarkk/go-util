@@ -23,6 +23,14 @@ func Assign_int[T ~int | ~int64 | ~uint64](k string, v any, target *T) error {
 	return nil
 }
 
+func Assign_bool(k string, v any, target *bool) error {
+	var ok bool
+	if *target, ok = v.(bool); !ok {
+		return Fatal_log(Type_error(k, v))
+	}
+	return nil
+}
+
 func Read_only(k string) error {
 	return Fatal_log(fmt.Errorf("Can not change %s after init", k))
 }
