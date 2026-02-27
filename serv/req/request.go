@@ -74,6 +74,22 @@ func Accept_lang(r *http.Request) []string {
 	return list
 }
 
+//	Get supported language from accepted languages
+func Support_accept_lang(r *http.Request, supported []string) string {
+	if len(supported) == 0 {
+		return ""
+	}
+	accepted := Accept_lang(r)
+	for _, accept := range accepted {
+		for _, support := range supported {
+			if accept == support {
+				return accept
+			}
+		}
+	}
+	return supported[0]
+}
+
 //	Check if GET query param is set but empty
 func Query_param_empty(s []string) bool {
 	if len(s) > 1 || s[0] != "" {
