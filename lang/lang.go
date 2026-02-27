@@ -1,6 +1,7 @@
 package lang
 
 import (
+	"fmt"
 	"log"
 	"errors"
 	"strconv"
@@ -44,6 +45,7 @@ func Init(fetcher Adapter, cache_expires int, languages []string){
 
 //	Create new instance and set language with accepted language
 func New(lang string, accept_langs []string) Lang {
+	fmt.Println("new lang")
 	l := Lang{
 		accept_langs: accept_langs,
 	}
