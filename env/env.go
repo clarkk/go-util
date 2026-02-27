@@ -71,6 +71,13 @@ func (e *Environment) Lang_printer() *lang.Printer {
 	return e.lang.Printer()
 }
 
+func Validate_lang(lang any) error {
+	if _, ok := lang.(string); !ok {
+		return Type_error("lang", lang)
+	}
+	return nil
+}
+
 func Fatal_log(err error) error {
 	log.Printf("env: %v", err)
 	return err
