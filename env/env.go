@@ -73,7 +73,7 @@ func (e *Environment) Lang_printer() *lang.Printer {
 
 func Validate_lang(lang any) error {
 	if _, ok := lang.(string); !ok {
-		return Type_error("lang", lang)
+		return Fatal_log(Type_error("lang", lang))
 	}
 	return nil
 }
