@@ -2,6 +2,7 @@ package env
 
 import (
 	"fmt"
+	"log"
 	"context"
 	"net/http"
 	"github.com/clarkk/go-util/lang"
@@ -29,14 +30,6 @@ type (
 	ctx_key		string
 )
 
-func Key_error(key string) error {
-	return fmt.Errorf("Invalid env key: %s", key)
-}
-
-func Type_error(key string, value any) error {
-	return fmt.Errorf("Invalid env key type: %s (%T)", key, value)
-}
-
 func New(d Env_data) *Environment {
 	return &Environment{
 		Env_data:	d,
@@ -62,6 +55,30 @@ func Request(r *http.Request) *Environment {
 		return e
 	}
 	return nil
+}
+
+func Validate_lang(v any) error {
+	if _, ok := v.(string); !ok {
+		return Type_error("lang", v)
+	}
+	return nil
+}
+
+func Fatal_log(err error) error {
+	log.Printf("env data: %v", err)
+	return err
+}
+
+func Key_error(key string) error {
+	return fmt.Errorf("Invalid env key: %s", key)
+}
+
+func Type_error(key string, value any) error {
+	return fmt.Errorf("Invalid env key type: %s (%T)", key, value)
+}
+
+func (e *Environment) Lang() string {
+	return e.lang.Get()
 }
 
 func (e *Environment) Lang_string(key string, replace map[string]any) string {
