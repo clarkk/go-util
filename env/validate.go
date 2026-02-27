@@ -5,11 +5,17 @@ import (
 	"log"
 )
 
-func Assign_uint64(k string, v any, target *uint64) error {
+func Assign_int[T ~int | ~int64 | ~uint64](k string, v any, target *T) error {
 	switch t := v.(type) {
 	case float64:
-		*target = uint64(t)
+		*target = T(t)
+	case int:
+		*target = T(t)
+	case int64:
+		*target = T(t)
 	case uint64:
+		*target = T(t)
+	case T:
 		*target = t
 	default:
 		return Fatal_log(Type_error(k, v))
