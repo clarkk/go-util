@@ -71,11 +71,17 @@ func (e *Environment) Lang_printer() *lang.Printer {
 	return e.lang.Printer()
 }
 
-func Validate_lang(lang any) error {
-	if _, ok := lang.(string); !ok {
-		return Fatal_log(Type_error("lang", lang))
+func Extract_lang(p map[string]any) (string, error){
+	lang, ok := p["lang"]
+	if !ok {
+		return "", nil
 	}
-	return nil
+	s, ok := lang.(string)
+	if !ok {
+		return "", Fatal_log(Type_error("lang", lang))
+	}
+	delete(p, "lang")
+	return s, nil
 }
 
 func Fatal_log(err error) error {
