@@ -23,6 +23,18 @@ func Assign_int[T ~int | ~int64 | ~uint64](k string, v any, target *T) error {
 	return nil
 }
 
+func Assign_string[T ~string](k string, v any, target *T) error {
+	switch t := v.(type) {
+	case string:
+		*target = T(t)
+	case T:
+		*target = t
+	default:
+		return Fatal_log(Type_error(k, v))
+	}
+	return nil
+}
+
 func Assign_bool(k string, v any, target *bool) error {
 	var ok bool
 	if *target, ok = v.(bool); !ok {
