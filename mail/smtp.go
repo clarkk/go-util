@@ -13,17 +13,17 @@ type SMTP struct {
 	logger	*log.Logger
 }
 
-func NewSMTP(host string, port int, user, pass, log_path string) *SMTP {
+func NewSMTP(host string, port int, user, pass, log_path string) (*SMTP, error){
 	logger, err := logs.New(log_path, 1024)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	
 	return &SMTP{
 		auth:	smtp.PlainAuth("", user, pass, host),
 		addr:	fmt.Sprintf("%s:%d", host, port),
 		logger:	logger,
-	}
+	}, nil
 }
 
 func (s *SMTP) Send(mail *Mail) error {
