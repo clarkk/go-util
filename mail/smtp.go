@@ -27,19 +27,19 @@ func NewSMTP(host string, port int, user, pass, log_path string) (*SMTP, error){
 }
 
 func (s *SMTP) Send(mail *Mail) error {
-	s.logger.Printf("[SEND] %s (Subject: %s)", mail.to_email, mail.subject)
+	s.logger.Printf("[SENDING] To: %s | Subject: %s", mail.to_email, mail.subject)
 	
 	msg, err := mail.Message()
 	if err != nil {
-		s.logger.Printf("[ERROR] Generate source: %v", err)
+		s.logger.Printf("[ERROR] Could not prepare message for %s: %v", mail.to_email, err)
 		return err
 	}
 	
 	if err = smtp.SendMail(s.addr, s.auth, mail.from_email, []string{mail.to_email}, []byte(msg)); err != nil {
-		s.logger.Printf("[ERROR] SMTP for %s: %v", mail.to_email, err)
+		s.logger.Printf("[ERROR] SMTP transfer failed to %s: %v", mail.to_email, err)
 		return err
 	}
 	
-	s.logger.Printf("[OK] Relay for %s", mail.to_email)
+	s.logger.Printf("[OK] Relay from=%s to=%s", mail.from_email, mail.to_email)
 	return nil
 }
