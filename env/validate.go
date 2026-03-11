@@ -32,8 +32,8 @@ func Assign_int_ptr[T ~int | ~int64 | ~uint64](k string, v any, target **T) erro
 		return nil
 	}
 	
-	if tv, ok := v.(*T); ok {
-		*target = tv
+	if t, ok := v.(*T); ok {
+		*target = t
 		return nil
 	}
 	
