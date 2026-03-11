@@ -6,6 +6,9 @@ import (
 )
 
 func Assign_int[T ~int | ~int64 | ~uint64](k string, v any, target *T) error {
+	if v == nil {
+		return nil
+	}
 	switch t := v.(type) {
 	case float64:
 		*target = T(t)
@@ -20,6 +23,19 @@ func Assign_int[T ~int | ~int64 | ~uint64](k string, v any, target *T) error {
 	default:
 		return Fatal_log(Type_error(k, v))
 	}
+	return nil
+}
+
+func Assign_int_ptr[T ~int | ~int64 | ~uint64](k string, v any, target **T) error {
+	if v == nil {
+		*target = nil
+		return nil
+	}
+	var val T
+	if err := Assign_int(k, v, &val); err != nil {
+		return err
+	}
+	*target = &val
 	return nil
 }
 
