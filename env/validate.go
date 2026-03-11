@@ -31,6 +31,12 @@ func Assign_int_ptr[T ~int | ~int64 | ~uint64](k string, v any, target **T) erro
 		*target = nil
 		return nil
 	}
+	
+	if tv, ok := v.(*T); ok {
+		*target = tv
+		return nil
+	}
+	
 	var val T
 	if err := Assign_int(k, v, &val); err != nil {
 		return err
