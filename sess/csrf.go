@@ -51,7 +51,7 @@ func (s *Session) Generate_CSRF(){
 		panic("Can not write to closed session")
 	}
 	
-	serv.Set_cookie_script(s.w, csrf_token, s.generate_CSRF(), 0)
+	serv.Set_cookie_script(s.w, s.r, csrf_token, s.generate_CSRF(), 0)
 }
 
 func (s *Session) generate_CSRF() (token string){
