@@ -92,7 +92,7 @@ func Start(w http.ResponseWriter, r *http.Request) (*Session, error){
 	cookie, err := r.Cookie(session_cookie_name)
 	if err != nil {
 		//	Create session cookie and start new session
-		sid 		= set_cookie(w, r)
+		sid 		= set_cookie(w)
 		sess 		= create_session(sid)
 	} else {
 		sid 		= cookie.Value
@@ -102,7 +102,7 @@ func Start(w http.ResponseWriter, r *http.Request) (*Session, error){
 		}
 		if sess == nil {
 			//	Create session cookie and start new session
-			sid 	= set_cookie(w, r)
+			sid 	= set_cookie(w)
 			sess 	= create_session(sid)
 		} else {
 			//	Continue session
@@ -141,7 +141,7 @@ func (s *Session) Regenerate(){
 	go delete_remote_session(ctx, s.sess.sid)
 	
 	//	Regenerate sid and update session
-	s.sess.sid = set_cookie(s.w, s.r)
+	s.sess.sid = set_cookie(s.w)
 	p.set(s.sess.sid, s.sess)
 	go update_remote_session(ctx, s.sess)
 }
@@ -327,9 +327,9 @@ func wrap_session(s *session) *Session {
 	}
 }
 
-func set_cookie(w http.ResponseWriter, r *http.Request) string {
+func set_cookie(w http.ResponseWriter) string {
 	sid := uuid_string()
-	serv.Set_cookie_session(w, r, session_cookie_name, sid)
+	serv.Set_cookie_session(w, session_cookie_name, sid)
 	return sid
 }
 
