@@ -25,11 +25,12 @@ var (
 
 type (
 	Session struct {
-		closed 		bool
-		w 			http.ResponseWriter
-		r 			*http.Request
-		data 		session_data
-		sess 		*session
+		closed 				bool
+		w 					http.ResponseWriter
+		r 					*http.Request
+		data 				session_data
+		sess 				*session
+		host_cookie_name	string
 	}
 	
 	sessions 		map[string]*session
@@ -83,16 +84,21 @@ func Start(w http.ResponseWriter, r *http.Request) (*Session, error){
 	
 	ctx := r.Context()
 	
+	cookie_name := session_cookie_name
+	if r.Host != "" {
+		cookie_name += "_"+r.Host
+	}
+	
 	var (
 		sid 	string
 		sess 	*session
 		err 	error
 	)
 	
-	cookie, err := r.Cookie(session_cookie_name)
+	cookie, err := r.Cookie(cookie_name)
 	if err != nil {
 		//	Create session cookie and start new session
-		sid 		= set_cookie(w)
+		sid 		= set_cookie(w, cookie_name)
 		sess 		= create_session(sid)
 	} else {
 		sid 		= cookie.Value
@@ -102,7 +108,7 @@ func Start(w http.ResponseWriter, r *http.Request) (*Session, error){
 		}
 		if sess == nil {
 			//	Create session cookie and start new session
-			sid 	= set_cookie(w)
+			sid 	= set_cookie(w, cookie_name)
 			sess 	= create_session(sid)
 		} else {
 			//	Continue session
@@ -110,7 +116,7 @@ func Start(w http.ResponseWriter, r *http.Request) (*Session, error){
 		}
 	}
 	
-	s := wrap_session(sess)
+	s := wrap_session(sess, cookie_name)
 	
 	ctx = context.WithValue(ctx, ctx_sess, s)
 	r2 := r.WithContext(ctx)
@@ -141,7 +147,7 @@ func (s *Session) Regenerate(){
 	go delete_remote_session(ctx, s.sess.sid)
 	
 	//	Regenerate sid and update session
-	s.sess.sid = set_cookie(s.w)
+	s.sess.sid = set_cookie(s.w, s.host_cookie_name)
 	p.set(s.sess.sid, s.sess)
 	go update_remote_session(ctx, s.sess)
 }
@@ -222,7 +228,7 @@ func (s *Session) Destroy(){
 	//	Delete session
 	p.delete(s.sess.sid)
 	go delete_remote_session(context.Background(), s.sess.sid)
-	serv.Delete_cookie(s.w, session_cookie_name)
+	serv.Delete_cookie(s.w, s.host_cookie_name)
 	if s.csrf_token() != "" {
 		serv.Delete_cookie(s.w, csrf_token)
 	}
@@ -320,16 +326,17 @@ func copy_data(data map[string]any) map[string]any {
 	return copied
 }
 
-func wrap_session(s *session) *Session {
+func wrap_session(s *session, cookie_name string) *Session {
 	return &Session{
-		data:	s.data,
-		sess:	s,
+		data:				s.data,
+		sess:				s,
+		host_cookie_name:	cookie_name,
 	}
 }
 
-func set_cookie(w http.ResponseWriter) string {
+func set_cookie(w http.ResponseWriter, cookie_name string) string {
 	sid := uuid_string()
-	serv.Set_cookie_session(w, session_cookie_name, sid)
+	serv.Set_cookie_session(w, cookie_name, sid)
 	return sid
 }
 
