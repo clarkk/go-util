@@ -222,7 +222,7 @@ func (s *Session) Destroy(){
 	//	Delete session
 	p.delete(s.sess.sid)
 	go delete_remote_session(context.Background(), s.sess.sid)
-	serv.Delete_cookie(s.w)
+	serv.Delete_cookie(s.w, session_cookie_name)
 	if s.csrf_token() != "" {
 		serv.Delete_cookie(s.w, csrf_token)
 	}
