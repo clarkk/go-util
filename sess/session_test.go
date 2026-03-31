@@ -188,11 +188,11 @@ func test_fetch_session(t *testing.T, sid string) *Session {
 		t.Fatalf("Unable to fetch session")
 	}
 	sess.reset()
-	return wrap_session(sess, "")
+	return wrap_session(sess)
 }
 
 func test_create_session() (string, *Session){
 	sid := uuid_string()
 	fmt.Println("created: "+sid)
-	return sid, wrap_session(create_session(sid), "")
+	return sid, wrap_session(create_session(sid))
 }
