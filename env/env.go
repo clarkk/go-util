@@ -16,11 +16,13 @@ type (
 		Lang() string
 		Data() Properties
 		Data_session() Properties
+		Update_lang(string)
 		Update(map[string]any) error
 	}
 	
 	Environment struct {
 		Env_data
+		r		*http.Request
 		lang	lang.Lang
 	}
 	
@@ -30,17 +32,19 @@ type (
 )
 
 func New(d Env_data) *Environment {
-	return &Environment{
+	e := &Environment{
 		Env_data:	d,
-		lang:		lang.New(d.Lang(), nil),
 	}
+	e.Set_lang(d.Lang())
+	return e
 }
 
 func New_request(r *http.Request, d Env_data) *Environment {
 	e := &Environment{
 		Env_data:	d,
-		lang:		lang.New(d.Lang(), req.Accept_lang(r)),
+		r:			r,
 	}
+	e.Set_lang(d.Lang())
 	
 	ctx := context.WithValue(r.Context(), ctx_env, e)
 	r2 := r.WithContext(ctx)
@@ -52,6 +56,15 @@ func New_request(r *http.Request, d Env_data) *Environment {
 func Request(r *http.Request) *Environment {
 	e, _ := r.Context().Value(ctx_env).(*Environment)
 	return e
+}
+
+func (e *Environment) Set_lang(l string){
+	var accept_lang []string
+	if l == "" && e.r != nil {
+		accept_lang = req.Accept_lang(e.r)
+	}
+	e.lang = lang.New(l, accept_lang)
+	e.Env_data.Update_lang(e.lang.Get())
 }
 
 func (e *Environment) Lang() string {
