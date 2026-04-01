@@ -4,6 +4,7 @@ import (
 	"log"
 	"errors"
 	"strconv"
+	"slices"
 	"strings"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
@@ -51,6 +52,11 @@ func New(lang string, accept_langs []string) Lang {
 	return l
 }
 
+//	Check if language is supported
+func (l *Lang) Supported(lang string) bool {
+	return slices.Contains(support_langs, lang)
+}
+
 //	Get language
 func (l *Lang) Get() string {
 	return l.lang
@@ -58,6 +64,7 @@ func (l *Lang) Get() string {
 
 //	Set language
 func (l *Lang) Set(lang string) error {
+	//	Check if language is supported
 	if lang = strings.ToLower(lang); lang != "" {
 		for _, v := range support_langs {
 			if lang == v {
@@ -66,6 +73,7 @@ func (l *Lang) Set(lang string) error {
 			}
 		}
 	}
+	//	Check if accept language is supported
 	for _, a := range l.accept_langs {
 		for _, v := range support_langs {
 			if a == v {
@@ -74,6 +82,7 @@ func (l *Lang) Set(lang string) error {
 			}
 		}
 	}
+	//	Fallback
 	l.lang = support_langs[0]
 	return l.set_printer()
 }
