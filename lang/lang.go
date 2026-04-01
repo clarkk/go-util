@@ -53,7 +53,7 @@ func New(lang string, accept_langs []string) Lang {
 }
 
 //	Check if language is supported
-func (l *Lang) Supported(lang string) bool {
+func Supported(lang string) bool {
 	return slices.Contains(support_langs, lang)
 }
 
