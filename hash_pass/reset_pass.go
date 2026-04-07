@@ -15,10 +15,12 @@ func Reset_token() (token, token_hash string, err error){
 		return
 	}
 	
-	token = hex.EncodeToString(b)
-	
-	hash := sha256.Sum256([]byte(token))
-	token_hash = hex.EncodeToString(hash[:])
+	token_hash = Reset_token_hash(hex.EncodeToString(b))
 	
 	return
+}
+
+func Reset_token_hash(token string) string {
+	hash := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(hash[:])
 }
