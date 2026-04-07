@@ -14,9 +14,7 @@ func Reset_token() (token, token_hash string, err error){
 	if err != nil {
 		return
 	}
-	
 	token_hash = Reset_token_hash(hex.EncodeToString(b))
-	
 	return
 }
 
