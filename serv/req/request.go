@@ -2,20 +2,28 @@ package req
 
 import (
 	"io"
+	"net"
 	"strings"
 	"net/http"
 )
 
 func Get_client_IP(r *http.Request) string {
-	ip := r.Header.Get("X-Real-Ip")
-	if ip == "" {
-		ip = r.Header.Get("X-Forwarded-For")
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		ips := strings.Split(xff, ",")
+		if len(ips) > 0 {
+			return strings.TrimSpace(ips[0])
+		}
 	}
-	if ip == "" {
-		ip = r.RemoteAddr
+	
+	if xri := r.Header.Get("X-Real-Ip"); xri != "" {
+		return xri
 	}
-	ip, _, _ = strings.Cut(ip, ":")
-	return ip
+	
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+	return host
 }
 
 //	Get all path slugs in URL
@@ -50,6 +58,9 @@ func User_agent(r *http.Request) string {
 //	Get accepted languages
 func Accept_lang(r *http.Request) []string {
 	s := r.Header.Get("Accept-Language")
+	if s == "" {
+		return nil
+	}
 	list := []string{}
 	unique := map[string]bool{}
 	for _, v := range strings.Split(s, ",") {
@@ -76,8 +87,5 @@ func Accept_lang(r *http.Request) []string {
 
 //	Check if GET query param is set but empty
 func Query_param_empty(s []string) bool {
-	if len(s) > 1 || s[0] != "" {
-		return false
-	}
-	return true
+	return len(s) == 1 && s[0] == ""
 }
