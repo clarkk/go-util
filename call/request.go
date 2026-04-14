@@ -97,7 +97,7 @@ func (c *Client) request(req *http.Request, out any) (int, http.Header, error){
 		
 		if out_json {
 			var out_err map[string]any
-			if err := json.UnmarshalRead(out_bytes, &out_err); err == nil {
+			if err := json.UnmarshalRead(bytes.NewReader(out_bytes), &out_err); err == nil {
 				return resp.StatusCode, header, fmt.Errorf("HTTP error (%d): %v", resp.StatusCode, out_err)
 			}
 		}
