@@ -93,13 +93,15 @@ func (c *Client) request(req *http.Request, out any) (int, http.Header, error){
 	out_json		:= strings.HasPrefix(content_type, TYPE_JSON)
 	
 	if resp.StatusCode >= 400 {
+		out_bytes, _ := io.ReadAll(resp.Body)
+		
 		if out_json {
 			var out_err map[string]any
-			if err := json.UnmarshalRead(resp.Body, &out_err); err == nil {
-				return resp.StatusCode, header, fmt.Errorf("Error (%d): %v", resp.StatusCode, out_err)
+			if err := json.UnmarshalRead(out_bytes, &out_err); err == nil {
+				return resp.StatusCode, header, fmt.Errorf("HTTP error (%d): %v", resp.StatusCode, out_err)
 			}
 		}
-		return resp.StatusCode, header, fmt.Errorf("HTTP error: %d", resp.StatusCode)
+		return resp.StatusCode, header, fmt.Errorf("HTTP error (%d): %s", resp.StatusCode, string(out_bytes))
 	}
 	
 	if out != nil {
