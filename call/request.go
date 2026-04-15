@@ -95,7 +95,7 @@ func (c *Client) request(req *http.Request, out any) (int, http.Header, error){
 	if resp.StatusCode >= 400 {
 		out_bytes, err := io.ReadAll(resp.Body)
 		if err != nil {
-			return resp.StatusCode, header, fmt.Errorf("Unable to read response body: %v", err)
+			return resp.StatusCode, header, fmt.Errorf("HTTP error (%d): Unable to read response body: %v", resp.StatusCode, err)
 		}
 		
 		if out_json {
