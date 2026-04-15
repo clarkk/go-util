@@ -95,25 +95,38 @@ func (c *Client) request(req *http.Request, out any) (int, http.Header, error){
 	if resp.StatusCode >= 400 {
 		b, err := io.ReadAll(resp.Body)
 		if err != nil {
-			return resp.StatusCode, header, fmt.Errorf("HTTP error (%d): Unable to read response body: %v", resp.StatusCode, err)
+			return resp.StatusCode, header, fmt.Errorf("HTTP %d: Unable to read response body: %v", resp.StatusCode, err)
 		}
 		
 		if out_json {
-			var out_err map[string]any
+			var out_err any
 			if err := json.UnmarshalRead(bytes.NewReader(b), &out_err); err == nil {
-				return resp.StatusCode, header, fmt.Errorf("HTTP error (%d): %v", resp.StatusCode, out_err)
+				return resp.StatusCode, header, &Error{
+					resp.StatusCode,
+					header,
+					out_err,
+				}
 			}
 		}
-		return resp.StatusCode, header, fmt.Errorf("HTTP error (%d): %s", resp.StatusCode, string(b))
+		return resp.StatusCode, header, &Error{
+			resp.StatusCode,
+			header,
+			string(b),
+		}
 	}
 	
 	if out != nil {
 		if !out_json {
-			return resp.StatusCode, header, fmt.Errorf("Expected JSON response, but got: %s", content_type)
+			return resp.StatusCode, header, &Error{
+				resp.StatusCode,
+				header,
+				fmt.Sprintf("Expected JSON response, but got: %s", content_type),
+			}
 		}
 		return resp.StatusCode, header, json.UnmarshalRead(resp.Body, out)
 	}
 	
+	io.Copy(io.Discard, resp.Body)
 	return resp.StatusCode, header, nil
 }
 
