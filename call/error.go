@@ -6,11 +6,12 @@ import (
 )
 
 type Error struct {
+	url		string
 	status	int
 	header	http.Header
 	body	any
 }
 
 func (e *Error) Error() string {
-	return fmt.Sprintf("HTTP %d: %+v", e.status, e.body)
+	return fmt.Sprintf("HTTP %d (%s): %+v", e.status, e.url, e.body)
 }

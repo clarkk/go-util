@@ -102,6 +102,7 @@ func (c *Client) request(req *http.Request, out any) (int, http.Header, error){
 			var out_err any
 			if err := json.UnmarshalRead(bytes.NewReader(b), &out_err); err == nil {
 				return resp.StatusCode, header, &Error{
+					req.URL.String(),
 					resp.StatusCode,
 					header,
 					out_err,
@@ -109,6 +110,7 @@ func (c *Client) request(req *http.Request, out any) (int, http.Header, error){
 			}
 		}
 		return resp.StatusCode, header, &Error{
+			req.URL.String(),
 			resp.StatusCode,
 			header,
 			string(b),
@@ -118,12 +120,21 @@ func (c *Client) request(req *http.Request, out any) (int, http.Header, error){
 	if out != nil {
 		if !out_json {
 			return resp.StatusCode, header, &Error{
+				req.URL.String(),
 				resp.StatusCode,
 				header,
 				fmt.Sprintf("Expected JSON response, but got: %s", content_type),
 			}
 		}
-		return resp.StatusCode, header, json.UnmarshalRead(resp.Body, out)
+		if err := json.UnmarshalRead(resp.Body, out); err != nil {
+			return resp.StatusCode, header, &Error{
+				req.URL.String(),
+				resp.StatusCode,
+				header,
+				fmt.Sprintf("JSON unmarshal error: %v", err),
+			}
+		}
+		return resp.StatusCode, header, nil
 	}
 	
 	io.Copy(io.Discard, resp.Body)
