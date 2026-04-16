@@ -14,6 +14,7 @@ import (
 const (
 	CONTENT_TYPE	= "Content-Type"
 	TYPE_JSON		= "application/json"
+	IDEMPOTENCY_KEY = "Idempotency-Key"
 )
 
 type (
@@ -40,7 +41,7 @@ func Option_basic_auth(auth string) Option {
 }
 
 func Option_idempotency(key string) Option {
-	return Option_header("Idempotency-Key", key)
+	return Option_header(IDEMPOTENCY_KEY, key)
 }
 
 func NewClient(endpoint string, timeout int, opts ...Option) *Client {
@@ -81,37 +82,38 @@ func (c *Client) Send(ctx context.Context, uri string, in, out any, opts ...Opti
 }
 
 func (c *Client) request(req *http.Request, out any) (int, http.Header, error){
-	resp, err := c.http_client.Do(req)
+	res, err := c.http_client.Do(req)
 	if err != nil {
 		return 0, nil, err
 	}
-	defer resp.Body.Close()
+	defer res.Body.Close()
 	
-	header := resp.Header
+	header := res.Header
 	
+	status			:= res.StatusCode
 	content_type	:= header.Get(CONTENT_TYPE)
 	out_json		:= strings.HasPrefix(content_type, TYPE_JSON)
 	
-	if resp.StatusCode >= 400 {
-		b, err := io.ReadAll(resp.Body)
+	if status >= 400 {
+		b, err := io.ReadAll(res.Body)
 		if err != nil {
-			return resp.StatusCode, header, fmt.Errorf("HTTP %d: Unable to read response body: %v", resp.StatusCode, err)
+			return status, header, fmt.Errorf("HTTP %d: Unable to read response body: %v", status, err)
 		}
 		
 		if out_json {
 			var out_err any
 			if err := json.UnmarshalRead(bytes.NewReader(b), &out_err); err == nil {
-				return resp.StatusCode, header, &Error{
+				return status, header, &Error{
 					req.URL.String(),
-					resp.StatusCode,
+					status,
 					header,
 					out_err,
 				}
 			}
 		}
-		return resp.StatusCode, header, &Error{
+		return status, header, &Error{
 			req.URL.String(),
-			resp.StatusCode,
+			status,
 			header,
 			string(b),
 		}
@@ -119,26 +121,26 @@ func (c *Client) request(req *http.Request, out any) (int, http.Header, error){
 	
 	if out != nil {
 		if !out_json {
-			return resp.StatusCode, header, &Error{
+			return status, header, &Error{
 				req.URL.String(),
-				resp.StatusCode,
+				status,
 				header,
 				fmt.Sprintf("Expected JSON response, but got: %s", content_type),
 			}
 		}
-		if err := json.UnmarshalRead(resp.Body, out); err != nil {
-			return resp.StatusCode, header, &Error{
+		if err := json.UnmarshalRead(res.Body, out); err != nil {
+			return status, header, &Error{
 				req.URL.String(),
-				resp.StatusCode,
+				status,
 				header,
 				fmt.Sprintf("JSON unmarshal error: %v", err),
 			}
 		}
-		return resp.StatusCode, header, nil
+		return status, header, nil
 	}
 	
-	io.Copy(io.Discard, resp.Body)
-	return resp.StatusCode, header, nil
+	io.Copy(io.Discard, res.Body)
+	return status, header, nil
 }
 
 func (c *Client) payload(in any) (string, io.Reader, error){
