@@ -15,3 +15,7 @@ type Error struct {
 func (e *Error) Error() string {
 	return fmt.Sprintf("HTTP %d (%s): %+v", e.status, e.url, e.body)
 }
+
+func (e *Error) Body() any {
+	return e.body
+}
