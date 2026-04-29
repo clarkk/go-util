@@ -28,7 +28,7 @@ var (
 type (
 	Method 			string
 	
-	subhost struct {
+	Subhost struct {
 		path_prefix			string
 		map_routes 			map_routes
 		map_exact			map_exact
@@ -62,28 +62,28 @@ type (
 	}
 )
 
-func (s *subhost) Priority_routing() *subhost {
+func (s *Subhost) Priority_routing() *Subhost {
 	s.priority_routing = true
 	return s
 }
 
 //	Apply route pattern exact
-func (s *subhost) Route_exact(method Method, pattern string, timeout int, handler http.HandlerFunc) *subhost {
+func (s *Subhost) Route_exact(method Method, pattern string, timeout int, handler http.HandlerFunc) *Subhost {
 	return s.route(method, pattern, timeout, handler, true, false)
 }
 
 //	Apply route pattern
-func (s *subhost) Route(method Method, pattern string, timeout int, handler http.HandlerFunc) *subhost {
+func (s *Subhost) Route(method Method, pattern string, timeout int, handler http.HandlerFunc) *Subhost {
 	return s.route(method, pattern, timeout, handler, false, false)
 }
 
 //	Apply blind route pattern (HTTP 404)
-func (s *subhost) Route_blind(method Method, pattern string) *subhost {
+func (s *Subhost) Route_blind(method Method, pattern string) *Subhost {
 	var handler http.HandlerFunc
 	return s.route(method, pattern, 0, handler, false, true)
 }
 
-func (s *subhost) route(method Method, pattern string, timeout int, handler http.HandlerFunc, exact, blind bool) *subhost {
+func (s *Subhost) route(method Method, pattern string, timeout int, handler http.HandlerFunc, exact, blind bool) *Subhost {
 	if s.path_prefix != "" {
 		pattern = s.path_prefix+pattern
 	}
@@ -121,7 +121,7 @@ func (s *subhost) route(method Method, pattern string, timeout int, handler http
 	return s
 }
 
-func (s *subhost) sort_priority(){
+func (s *Subhost) sort_priority(){
 	slices.SortFunc(s.routes, func(a, b *route) int {
 		a_length	:= len(a.slugs)
 		b_length	:= len(b.slugs)
@@ -180,7 +180,7 @@ func (s *subhost) sort_priority(){
 	})
 }
 
-func (s *subhost) validate_existing_route(method Method, pattern string, exact bool, existing_route route_handlers){
+func (s *Subhost) validate_existing_route(method Method, pattern string, exact bool, existing_route route_handlers){
 	if _, ok := existing_route[string(method)]; ok {
 		log.Fatalf("Route is duplicate: %s %s", method, pattern)
 	}

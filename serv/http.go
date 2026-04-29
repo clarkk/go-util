@@ -34,7 +34,7 @@ type (
 		subhosts 	subhosts
 	}
 	
-	subhosts 		map[string]*subhost
+	subhosts 		map[string]*Subhost
 	
 	ctx_key 		string
 )
@@ -79,12 +79,12 @@ func (h *HTTP) Test(){
 }
 
 //	Apply subhost with underlying routes
-func (h *HTTP) Subhost(sld string) *subhost {
+func (h *HTTP) Subhost(sld string) *Subhost {
 	return h.Subhost_path_prefix(sld, "")
 }
 
 //	Apply subhost with underlying routes and path prefix
-func (h *HTTP) Subhost_path_prefix(sld, path_prefix string) *subhost {
+func (h *HTTP) Subhost_path_prefix(sld, path_prefix string) *Subhost {
 	//	Validate subhost (sub-level domain)
 	if !re_sld.MatchString(sld) {
 		if sld[len(sld)-1:] != "." {
@@ -104,7 +104,7 @@ func (h *HTTP) Subhost_path_prefix(sld, path_prefix string) *subhost {
 			log.Fatalf("Path prefix contains invalid chars")
 		}
 	}
-	h.subhosts[sld] = &subhost{
+	h.subhosts[sld] = &Subhost{
 		path_prefix:	path_prefix,
 		map_routes:		map_routes{},
 		map_exact:		map_exact{},
