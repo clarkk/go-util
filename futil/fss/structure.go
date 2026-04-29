@@ -14,15 +14,9 @@ const (
 	FSS_SEPARATOR 	= "_"
 )
 
-//	Get structured file path from file ID
-func Get(file_id uint64, base_path string, min_digits int) string {
-	get, _ := compile(file_id, base_path, min_digits, false, false)
-	return get
-}
-
-//	Get structured file path from file ID with directory
-func Get_dir(file_id uint64, base_path string, min_digits int) string {
-	get, _ := compile(file_id, base_path, min_digits, false, true)
+//	Get structured file path
+func Entry(file_id uint64, base_path string, min_digits int) string {
+	get, _ := compile(file_id, base_path, min_digits, false)
 	return get
 }
 
@@ -33,12 +27,7 @@ func Exists_dir(file_id uint64, base_path string, min_digits int) (bool, error) 
 
 //	Create structured file path from file ID
 func Create(file_id uint64, base_path string, min_digits int) (string, error){
-	return compile(file_id, base_path, min_digits, true, false)
-}
-
-//	Create structured file path from file ID with directory
-func Create_dir(file_id uint64, base_path string, min_digits int) (string, error){
-	return compile(file_id, base_path, min_digits, true, true)
+	return compile(file_id, base_path, min_digits, true)
 }
 
 //	Fetch files in structured file path by file ID
@@ -97,7 +86,7 @@ func Purge(path string) error {
 }
 
 //	Compile structured file path from file ID
-func compile(file_id uint64, base_path string, min_digits int, create, directory bool) (string, error){
+func compile(file_id uint64, base_path string, min_digits int, create bool) (string, error){
 	id		:= strconv.FormatUint(file_id, 10)
 	length	:= len(id)
 	
@@ -121,11 +110,6 @@ func compile(file_id uint64, base_path string, min_digits int, create, directory
 		for range remain - 1 {
 			sb.WriteByte('0')
 		}
-	}
-	
-	if directory {
-		sb.WriteByte('/')
-		sb.WriteString(id)
 	}
 	
 	path := sb.String()
