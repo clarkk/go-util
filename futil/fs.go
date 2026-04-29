@@ -25,6 +25,7 @@ func Exists(path string) (bool, error){
 	return true, nil
 }
 
+//	Check if file/directory is writeable
 func Writable(path string) bool {
     return unix.Access(path, unix.W_OK) == nil
 }

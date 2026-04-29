@@ -20,15 +20,15 @@ func Get(file_id int, base_path string, min_digits int) string {
 	return get
 }
 
-//	Get structured file path from file ID with folder
-func Get_folder(file_id int, base_path string, min_digits int) string {
+//	Get structured file path from file ID with directory
+func Get_dir(file_id int, base_path string, min_digits int) string {
 	get, _ := compile(file_id, base_path, min_digits, false, true)
 	return get
 }
 
-//	Check if structed file path exists from file ID with folder
-func Exists_folder(file_id int, base_path string, min_digits int) (bool, error) {
-	return futil.Exists(Get_folder(file_id, base_path, min_digits))
+//	Check if structed file path exists from file ID with directory
+func Exists_dir(file_id int, base_path string, min_digits int) (bool, error) {
+	return futil.Exists(Get_dir(file_id, base_path, min_digits))
 }
 
 //	Create structured file path from file ID
@@ -36,8 +36,8 @@ func Create(file_id int, base_path string, min_digits int) (string, error){
 	return compile(file_id, base_path, min_digits, true, false)
 }
 
-//	Create structured file path from file ID with folder
-func Create_folder(file_id int, base_path string, min_digits int) (string, error){
+//	Create structured file path from file ID with directory
+func Create_dir(file_id int, base_path string, min_digits int) (string, error){
 	return compile(file_id, base_path, min_digits, true, true)
 }
 
@@ -50,9 +50,9 @@ func Fetch(file_id int, base_path string, min_digits int) ([]string, error){
 	return files, nil
 }
 
-//	Fetch files in structured file path by file ID with folder
-func Fetch_folder(file_id int, base_path string, min_digits int) ([]string, error){
-	files, err := filepath.Glob(Get_folder(file_id, base_path, min_digits)+"/*")
+//	Fetch files in structured file path by file ID with directory
+func Fetch_dir(file_id int, base_path string, min_digits int) ([]string, error){
+	files, err := filepath.Glob(Get_dir(file_id, base_path, min_digits)+"/*")
 	if err != nil {
 		return []string{}, fmt.Errorf("Unable to fetch FSS files: %w", err)
 	}
@@ -97,7 +97,7 @@ func Purge(path string) error {
 }
 
 //	Compile structured file path from file ID
-func compile(file_id int, base_path string, min_digits int, create, folder bool) (string, error){
+func compile(file_id int, base_path string, min_digits int, create, directory bool) (string, error){
 	id 		:= strconv.Itoa(file_id)
 	length	:= len(id)
 	
@@ -123,7 +123,7 @@ func compile(file_id int, base_path string, min_digits int, create, folder bool)
 		}
 	}
 	
-	if folder {
+	if directory {
 		sb.WriteByte('/')
 		sb.WriteString(id)
 	}
