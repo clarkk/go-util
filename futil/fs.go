@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"errors"
+	"golang.org/x/sys/unix"
 )
 
 const (
@@ -22,6 +23,10 @@ func Exists(path string) (bool, error){
 		return false, err
 	}
 	return true, nil
+}
+
+func Writable(path string) bool {
+    return unix.Access(path, unix.W_OK) == nil
 }
 
 //	Check if directory is empty
