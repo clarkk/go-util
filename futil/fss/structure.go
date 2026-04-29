@@ -22,7 +22,7 @@ func Entry(file_id uint64, base_path string, min_digits int) string {
 
 //	Check if structed file path exists from file ID with directory
 func Exists_dir(file_id uint64, base_path string, min_digits int) (bool, error) {
-	return futil.Exists(Get_dir(file_id, base_path, min_digits))
+	return futil.Exists(Entry(file_id, base_path, min_digits))
 }
 
 //	Create structured file path from file ID
@@ -32,7 +32,7 @@ func Create(file_id uint64, base_path string, min_digits int) (string, error){
 
 //	Fetch files in structured file path by file ID
 func Fetch(file_id uint64, base_path string, min_digits int) ([]string, error){
-	files, err := filepath.Glob(Get(file_id, base_path, min_digits)+"/"+strconv.FormatUint(file_id, 10)+FSS_SEPARATOR+"*")
+	files, err := filepath.Glob(Entry(file_id, base_path, min_digits)+"/"+strconv.FormatUint(file_id, 10)+FSS_SEPARATOR+"*")
 	if err != nil {
 		return []string{}, fmt.Errorf("Unable to fetch FSS files: %w", err)
 	}
@@ -41,7 +41,7 @@ func Fetch(file_id uint64, base_path string, min_digits int) ([]string, error){
 
 //	Fetch files in structured file path by file ID with directory
 func Fetch_dir(file_id uint64, base_path string, min_digits int) ([]string, error){
-	files, err := filepath.Glob(Get_dir(file_id, base_path, min_digits)+"/*")
+	files, err := filepath.Glob(Entry(file_id, base_path, min_digits)+"/*")
 	if err != nil {
 		return []string{}, fmt.Errorf("Unable to fetch FSS files: %w", err)
 	}
