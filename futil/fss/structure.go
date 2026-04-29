@@ -21,7 +21,7 @@ func Entry(file_id uint64, base_path string, min_digits int) string {
 }
 
 //	Check if structed file path exists from file ID with directory
-func Exists_dir(file_id uint64, base_path string, min_digits int) (bool, error) {
+func Exists(file_id uint64, base_path string, min_digits int) (bool, error) {
 	return futil.Exists(Entry(file_id, base_path, min_digits))
 }
 
