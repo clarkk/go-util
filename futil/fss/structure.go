@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	FSS_MIN_DIGITS 	= 2
-	FSS_SEPARATOR 	= "_"
+	MIN_DIGITS 	= 2
+	SEPARATOR 	= "_"
 )
 
 //	Get structured file path
@@ -32,7 +32,7 @@ func Create(file_id uint64, base_path string, min_digits int) (string, error){
 
 //	Fetch files in structured file path by file ID
 func Fetch(file_id uint64, base_path string, min_digits int) ([]string, error){
-	files, err := filepath.Glob(Dir(file_id, base_path, min_digits)+"/"+strconv.FormatUint(file_id, 10)+FSS_SEPARATOR+"*")
+	files, err := filepath.Glob(Dir(file_id, base_path, min_digits)+"/"+strconv.FormatUint(file_id, 10)+SEPARATOR+"*")
 	if err != nil {
 		return []string{}, fmt.Errorf("Unable to fetch FSS files: %w", err)
 	}
