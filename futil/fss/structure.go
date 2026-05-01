@@ -49,13 +49,18 @@ func Fetch(file_id uint64, base_path string, min_digits int) ([]string, error){
 }*/
 
 //	Delete files in structed file path by file ID
-func Clear(file_id uint64, base_path string, min_digits int) error {
+func Clear(file_id uint64, base_path string, min_digits int, purge bool) error {
 	files, err := Fetch(file_id, base_path, min_digits)
 	if err != nil {
 		return err
 	}
 	if len(files) > 0 {
-		return futil.Delete(files)
+		if err = futil.Delete(files); err != nil {
+			return err
+		}
+	}
+	if purge {
+		return Purge(Dir(file_id, base_path, min_digits))
 	}
 	return nil
 }
@@ -71,7 +76,7 @@ func Purge(path string) error {
 		return fmt.Errorf("Path is not a directory %s", path)
 	}
 	
-	for true {
+	for {
 		//	Check if directory name is digits
 		if _, err := strconv.ParseUint(filepath.Base(path), 10, 64); err != nil {
 			break
