@@ -34,7 +34,7 @@ func Create(file_id uint64, base_path string, min_digits int) (string, error){
 func Fetch(file_id uint64, base_path string, min_digits int) ([]string, error){
 	files, err := filepath.Glob(Dir(file_id, base_path, min_digits)+"/"+strconv.FormatUint(file_id, 10)+SEPARATOR+"*")
 	if err != nil {
-		return []string{}, fmt.Errorf("Unable to fetch FSS files: %w", err)
+		return nil, fmt.Errorf("Unable to fetch FSS files: %w", err)
 	}
 	return files, nil
 }
@@ -43,7 +43,7 @@ func Fetch(file_id uint64, base_path string, min_digits int) ([]string, error){
 /*func Fetch_dir(file_id uint64, base_path string, min_digits int) ([]string, error){
 	files, err := filepath.Glob(Dir(file_id, base_path, min_digits)+"/*")
 	if err != nil {
-		return []string{}, fmt.Errorf("Unable to fetch FSS files: %w", err)
+		return nil, fmt.Errorf("Unable to fetch FSS files: %w", err)
 	}
 	return files, nil
 }*/
