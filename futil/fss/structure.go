@@ -40,12 +40,24 @@ func Fetch(file_id uint64, base_path string, min_digits int) ([]string, error){
 }
 
 //	Fetch files in structured file path by file ID with directory
-func Fetch_dir(file_id uint64, base_path string, min_digits int) ([]string, error){
+/*func Fetch_dir(file_id uint64, base_path string, min_digits int) ([]string, error){
 	files, err := filepath.Glob(Dir(file_id, base_path, min_digits)+"/*")
 	if err != nil {
 		return []string{}, fmt.Errorf("Unable to fetch FSS files: %w", err)
 	}
 	return files, nil
+}*/
+
+//	Delete files in structed file path by file ID
+func Clear(file_id uint64, base_path string, min_digits int) error {
+	files, err := Fetch(file_id, base_path, min_digits)
+	if err != nil {
+		return err
+	}
+	if len(files) > 0 {
+		return futil.Delete(files)
+	}
+	return nil
 }
 
 //	Delete empty directories in structured file path
