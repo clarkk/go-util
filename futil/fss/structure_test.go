@@ -117,13 +117,18 @@ func Test_purge(t *testing.T){
 		t.Errorf("create failed: %v", err)
 	}
 	
+	err = p2.Write("data.txt", []byte(""), 0644)
+	if err != nil {
+		t.Errorf("write failed: %v", err)
+	}
+	
 	p3 := New(90390000000, base, MIN_DIGITS)
 	_, err = p3.Create()
 	if err != nil {
 		t.Errorf("create failed: %v", err)
 	}
 	
-	err = p2.Write("data.txt", []byte(""), 0644)
+	err = p3.Write("data.txt", []byte(""), 0644)
 	if err != nil {
 		t.Errorf("write failed: %v", err)
 	}
@@ -141,14 +146,20 @@ func Test_purge(t *testing.T){
 		"90000000000/300000000/90000000/800000/200",
 		"90000000000/300000000/90000000/800000/200/90390800200_data.txt",
 		"90000000000/300000000/90000000/800000/200/90390800210_data.txt",
+		"90000000000/300000000/90000000/90390000000_data.txt",
 	}
 	if !reflect.DeepEqual(files, want) {
 		t.Errorf("purge mismatch:\ngot: %v\nwant: %v", files, want)
 	}
 	
-	/*err = p1.Clear(true)
+	err = p1.Clear(true)
 	if err != nil {
 		t.Errorf("clear failed: %v", err)
+	}
+	
+	files, err = get_files(base)
+	if err != nil {
+		t.Errorf("files: %v", err)
 	}
 	
 	want = []string{
@@ -157,6 +168,8 @@ func Test_purge(t *testing.T){
 		"90000000000/300000000/90000000",
 		"90000000000/300000000/90000000/800000",
 		"90000000000/300000000/90000000/800000/200",
+		"90000000000/300000000/90000000/800000/200/90390800210_data.txt",
+		"90000000000/300000000/90000000/90390000000_data.txt",
 	}
 	if !reflect.DeepEqual(files, want) {
 		t.Errorf("purge mismatch:\ngot: %v\nwant: %v", files, want)
@@ -167,14 +180,34 @@ func Test_purge(t *testing.T){
 		t.Errorf("clear failed: %v", err)
 	}
 	
+	files, err = get_files(base)
+	if err != nil {
+		t.Errorf("files: %v", err)
+	}
+	
 	want = []string{
 		"90000000000",
 		"90000000000/300000000",
 		"90000000000/300000000/90000000",
+		"90000000000/300000000/90000000/90390000000_data.txt",
 	}
 	if !reflect.DeepEqual(files, want) {
 		t.Errorf("purge mismatch:\ngot: %v\nwant: %v", files, want)
-	}*/
+	}
+	
+	err = p3.Clear(true)
+	if err != nil {
+		t.Errorf("clear failed: %v", err)
+	}
+	
+	files, err = get_files(base)
+	if err != nil {
+		t.Errorf("files: %v", err)
+	}
+	
+	if len(files) != 0 {
+		t.Errorf("purge failed: files not cleared")
+	}
 }
 
 func get_files(root string) ([]string, error){
