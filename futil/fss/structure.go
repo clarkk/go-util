@@ -2,6 +2,7 @@ package fss
 
 import (
 	"os"
+	"io/fs"
 	"fmt"
 	"strings"
 	"strconv"
@@ -15,13 +16,16 @@ const (
 )
 
 type Path struct {
-	file_id	uint64
-	path	string
+	file_id		uint64
+	base_path	string
+	path		string
 }
 
 func New(file_id uint64, base_path string, min_digits int) *Path {
+	base_path = filepath.Clean(base_path)
 	return &Path{
 		file_id:	file_id,
+		base_path:	base_path,
 		path:		compile(file_id, base_path, min_digits),
 	}
 }
@@ -44,23 +48,23 @@ func (p *Path) Create() (string, error){
 	return p.path, nil
 }
 
+//	Write file
+func (p *Path) Write(suffix_name string, data []byte, mode fs.FileMode) error {
+	file := p.file_prefix()+suffix_name
+	if err := os.WriteFile(file, data, mode); err != nil {
+		return fmt.Errorf("Unable to write FSS file %s: %w", file, err)
+	}
+	return nil
+}
+
 //	Fetch files by ID + separator
 func (p *Path) Fetch() ([]string, error){
-	files, err := filepath.Glob(p.path+"/"+strconv.FormatUint(p.file_id, 10)+SEPARATOR+"*")
+	files, err := filepath.Glob(p.file_prefix()+"*")
 	if err != nil {
 		return nil, fmt.Errorf("Unable to fetch FSS files: %w", err)
 	}
 	return files, nil
 }
-
-//	Fetch files in structured file path by file ID with directory
-/*func Fetch_dir(file_id uint64, base_path string, min_digits int) ([]string, error){
-	files, err := filepath.Glob(Dir(file_id, base_path, min_digits)+"/*")
-	if err != nil {
-		return nil, fmt.Errorf("Unable to fetch FSS files: %w", err)
-	}
-	return files, nil
-}*/
 
 //	Delete files by ID + separator
 func (p *Path) Clear(purge bool) error {
@@ -92,6 +96,10 @@ func (p *Path) Purge() error {
 	
 	path := p.path
 	for {
+		if path == p.base_path {
+			break
+		}
+		
 		//	Check if directory name is digits
 		if _, err := strconv.ParseUint(filepath.Base(path), 10, 64); err != nil {
 			break
@@ -117,12 +125,16 @@ func (p *Path) Purge() error {
 	return nil
 }
 
+func (p *Path) file_prefix() string {
+	return p.path+"/"+strconv.FormatUint(p.file_id, 10)+SEPARATOR
+}
+
 func compile(file_id uint64, base_path string, min_digits int) string {
 	id		:= strconv.FormatUint(file_id, 10)
 	length	:= len(id)
 	
 	var sb strings.Builder
-	sb.WriteString(strings.TrimRight(base_path, "/"))
+	sb.WriteString(base_path)
 	
 	for i := range length {
 		remain := length - i
