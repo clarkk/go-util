@@ -14,18 +14,23 @@ var data = []input{
 }
 
 type input struct {
-	file_id 	int
+	file_id 	uint64
 	path 		string
 	min_digits 	int
 	output 		string
 }
 
-func Test_get(t *testing.T){
+func Test_dir(t *testing.T){
 	for i := range data {
-		got 	:= Get(data[i].file_id, data[i].path, data[i].min_digits)
+		got 	:= Dir(data[i].file_id, data[i].path, data[i].min_digits)
 		want 	:= data[i].output
 		if got != want {
 			t.Errorf("got %q, wanted %q", got, want)
 		}
 	}
+}
+
+func Test_create(t *testing.T){
+	//temp := t.TempDir()
+	
 }

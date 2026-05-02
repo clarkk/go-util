@@ -14,25 +14,39 @@ const (
 	SEPARATOR 	= "_"
 )
 
-//	Get structured file path
-func Dir(file_id uint64, base_path string, min_digits int) string {
-	get, _ := compile(file_id, base_path, min_digits, false)
-	return get
+type Path struct {
+	file_id	uint64
+	path	string
 }
 
-//	Check if structed file path exists from file ID with directory
-func Exists(file_id uint64, base_path string, min_digits int) (bool, error){
-	return futil.Exists(Dir(file_id, base_path, min_digits))
+func New(file_id uint64, base_path string, min_digits int) *Path {
+	return &Path{
+		file_id:	file_id,
+		path:		compile(file_id, base_path, min_digits),
+	}
 }
 
-//	Create structured file path from file ID
-func Create(file_id uint64, base_path string, min_digits int) (string, error){
-	return compile(file_id, base_path, min_digits, true)
+//	Get path
+func (p *Path) Get() string {
+	return p.path
 }
 
-//	Fetch files in structured file path by file ID
-func Fetch(file_id uint64, base_path string, min_digits int) ([]string, error){
-	files, err := filepath.Glob(Dir(file_id, base_path, min_digits)+"/"+strconv.FormatUint(file_id, 10)+SEPARATOR+"*")
+//	Check if path exists
+func (p *Path) Exists() (bool, error){
+	return futil.Exists(p.path)
+}
+
+//	Create path
+func (p *Path) Create() (string, error){
+	if err := os.MkdirAll(p.path, futil.CHMOD_RWX_OWNER); err != nil {
+		return "", fmt.Errorf("Unable to create FSS path %s: %w", p.path, err)
+	}
+	return p.path, nil
+}
+
+//	Fetch files by ID + separator
+func (p *Path) Fetch() ([]string, error){
+	files, err := filepath.Glob(p.path+"/"+strconv.FormatUint(p.file_id, 10)+SEPARATOR+"*")
 	if err != nil {
 		return nil, fmt.Errorf("Unable to fetch FSS files: %w", err)
 	}
@@ -48,9 +62,9 @@ func Fetch(file_id uint64, base_path string, min_digits int) ([]string, error){
 	return files, nil
 }*/
 
-//	Delete files in structed file path by file ID
-func Clear(file_id uint64, base_path string, min_digits int, purge bool) error {
-	files, err := Fetch(file_id, base_path, min_digits)
+//	Delete files by ID + separator
+func (p *Path) Clear(purge bool) error {
+	files, err := p.Fetch()
 	if err != nil {
 		return err
 	}
@@ -60,22 +74,23 @@ func Clear(file_id uint64, base_path string, min_digits int, purge bool) error {
 		}
 	}
 	if purge {
-		return Purge(Dir(file_id, base_path, min_digits))
+		return p.Purge()
 	}
 	return nil
 }
 
-//	Delete empty directories in structured file path
-func Purge(path string) error {
+//	Delete empty directories in path
+func (p *Path) Purge() error {
 	//	Check if path is a directory
-	stat, err := os.Stat(path)
+	stat, err := os.Stat(p.path)
 	if err != nil {
 		return fmt.Errorf("Unable to access directory: %w", err)
 	}
 	if !stat.IsDir() {
-		return fmt.Errorf("Path is not a directory %s", path)
+		return fmt.Errorf("Path is not a directory %s", p.path)
 	}
 	
+	path := p.path
 	for {
 		//	Check if directory name is digits
 		if _, err := strconv.ParseUint(filepath.Base(path), 10, 64); err != nil {
@@ -102,8 +117,7 @@ func Purge(path string) error {
 	return nil
 }
 
-//	Compile structured file path from file ID
-func compile(file_id uint64, base_path string, min_digits int, create bool) (string, error){
+func compile(file_id uint64, base_path string, min_digits int) string {
 	id		:= strconv.FormatUint(file_id, 10)
 	length	:= len(id)
 	
@@ -129,13 +143,5 @@ func compile(file_id uint64, base_path string, min_digits int, create bool) (str
 		}
 	}
 	
-	path := sb.String()
-	
-	if create {
-		if err := os.MkdirAll(path, futil.CHMOD_RWX_OWNER); err != nil {
-			return "", fmt.Errorf("Unable to create FSS path %s: %w", path, err)
-		}
-	}
-	
-	return path, nil
+	return sb.String()
 }
