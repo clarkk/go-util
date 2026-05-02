@@ -1,8 +1,10 @@
 package fss
 
 import (
+	"io/fs"
 	"testing"
 	"reflect"
+	"path/filepath"
 )
 
 var data = []input{
@@ -37,10 +39,10 @@ func Test_get(t *testing.T){
 }
 
 func Test_create_exists_write_fetch_clear(t *testing.T){
-	path := t.TempDir()
+	base := t.TempDir()
 	
 	for i := range data {
-		p := New(data[i].file_id, path, data[i].min_digits)
+		p := New(data[i].file_id, base, data[i].min_digits)
 		
 		//	Create
 		_, err := p.Create()
@@ -93,4 +95,103 @@ func Test_create_exists_write_fetch_clear(t *testing.T){
 			t.Errorf("clear failed: files not cleared")
 		}
 	}
+}
+
+func Test_purge(t *testing.T){
+	base := t.TempDir()
+	
+	p1 := New(90390800200, base, MIN_DIGITS)
+	_, err := p1.Create()
+	if err != nil {
+		t.Errorf("create failed: %v", err)
+	}
+	
+	err = p1.Write("data.txt", []byte(""), 0644)
+	if err != nil {
+		t.Errorf("write failed: %v", err)
+	}
+	
+	p2 := New(90390800210, base, MIN_DIGITS)
+	_, err = p2.Create()
+	if err != nil {
+		t.Errorf("create failed: %v", err)
+	}
+	
+	p3 := New(90390000000, base, MIN_DIGITS)
+	_, err = p3.Create()
+	if err != nil {
+		t.Errorf("create failed: %v", err)
+	}
+	
+	err = p2.Write("data.txt", []byte(""), 0644)
+	if err != nil {
+		t.Errorf("write failed: %v", err)
+	}
+	
+	files, err := get_files(base)
+	if err != nil {
+		t.Errorf("files: %v", err)
+	}
+	
+	want := []string{
+		"90000000000",
+		"90000000000/300000000",
+		"90000000000/300000000/90000000",
+		"90000000000/300000000/90000000/800000",
+		"90000000000/300000000/90000000/800000/200",
+		"90000000000/300000000/90000000/800000/200/90390800200_data.txt",
+		"90000000000/300000000/90000000/800000/200/90390800210_data.txt",
+	}
+	if !reflect.DeepEqual(files, want) {
+		t.Errorf("purge mismatch:\ngot: %v\nwant: %v", files, want)
+	}
+	
+	/*err = p1.Clear(true)
+	if err != nil {
+		t.Errorf("clear failed: %v", err)
+	}
+	
+	want = []string{
+		"90000000000",
+		"90000000000/300000000",
+		"90000000000/300000000/90000000",
+		"90000000000/300000000/90000000/800000",
+		"90000000000/300000000/90000000/800000/200",
+	}
+	if !reflect.DeepEqual(files, want) {
+		t.Errorf("purge mismatch:\ngot: %v\nwant: %v", files, want)
+	}
+	
+	err = p2.Clear(true)
+	if err != nil {
+		t.Errorf("clear failed: %v", err)
+	}
+	
+	want = []string{
+		"90000000000",
+		"90000000000/300000000",
+		"90000000000/300000000/90000000",
+	}
+	if !reflect.DeepEqual(files, want) {
+		t.Errorf("purge mismatch:\ngot: %v\nwant: %v", files, want)
+	}*/
+}
+
+func get_files(root string) ([]string, error){
+	var files []string
+	root = filepath.Clean(root)
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		rel, err := filepath.Rel(root, path)
+		if err != nil {
+			return err
+		}
+		if rel != "." {
+			files = append(files, rel)
+		}
+		return nil
+	})
+	return files, err
 }
