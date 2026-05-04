@@ -57,9 +57,18 @@ func (p *Path) Write(suffix_name string, data []byte, mode fs.FileMode) error {
 	return nil
 }
 
-//	Fetch files by ID + separator
+//	Fetch files by ID
 func (p *Path) Fetch() ([]string, error){
 	files, err := filepath.Glob(p.file_prefix()+"*")
+	if err != nil {
+		return nil, fmt.Errorf("Unable to fetch FSS files: %w", err)
+	}
+	return files, nil
+}
+
+//	Fetch files by ID + file extension
+func (p *Path) Fetch_extension(extension string) ([]string, error){
+	files, err := filepath.Glob(p.file_prefix()+"*."+extension)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to fetch FSS files: %w", err)
 	}
