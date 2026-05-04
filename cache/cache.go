@@ -65,6 +65,12 @@ func (c *Cache[K, V]) Set(key K, value V, ttl int){
 	}
 }
 
+func (c *Cache[K, V]) Delete(key K){
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	delete(c.items, key)
+}
+
 func (c *Cache[K, V]) purge_expired(){
 	if ok := c.lock.TryLock(); !ok {
 		return
