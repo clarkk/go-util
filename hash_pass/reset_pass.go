@@ -10,8 +10,7 @@ const reset_token_length = 32
 
 func Reset_token() (token, token_hash string, err error){
 	b := make([]byte, reset_token_length)
-	_, err = rand.Read(b)
-	if err != nil {
+	if _, err = rand.Read(b); err != nil {
 		return
 	}
 	token		= hex.EncodeToString(b)
