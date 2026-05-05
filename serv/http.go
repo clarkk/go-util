@@ -319,7 +319,7 @@ func (h *HTTP) used_port_pid() (string, string){
 		c = cmd.Command{}
 		c.Run(fmt.Sprintf("ps -p %s -o comm=", pid))
 		if !c.Empty(){
-			name = c.Output_lines()[0]
+			name = c.Output_lines(false)[0]
 		}
 		return pid, name
 	}

@@ -42,9 +42,13 @@ func (c *Command) Output_lines(trim bool) []string {
 		return nil
 	}
 	out := c.Output(trim)
-	lines := strings.Split(out, "\n")
-	for i := range lines {
-		lines[i] = strings.Trim(lines[i], " \t")
+	raw := strings.Split(out, "\n")
+	lines := make([]string, 0, len(raw))
+	for i := range raw {
+		line := strings.Trim(raw[i], " \t")
+		if line != "" {
+			lines = append(lines, line)
+		}
 	}
 	return lines
 }
