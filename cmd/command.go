@@ -37,18 +37,21 @@ func (c *Command) Output(trim bool) string {
 	return out
 }
 
-func (c *Command) Output_lines() []string {
-	out := c.Output(true)
+func (c *Command) Output_lines(trim bool) []string {
+	if c.Empty() {
+		return nil
+	}
+	out := c.Output(trim)
 	lines := strings.Split(out, "\n")
 	for i := range lines {
-		lines[i] = strings.Trim(lines[i], " ")
+		lines[i] = strings.Trim(lines[i], " \t")
 	}
 	return lines
 }
 
 func (c *Command) Output_fields() [][]string {
 	fields := [][]string{}
-	lines := c.Output_lines()
+	lines := c.Output_lines(true)
 	for i := range lines {
 		fields = append(fields, strings.Split(lines[i], " "))
 	}
