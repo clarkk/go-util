@@ -8,9 +8,7 @@ import (
 	"os/exec"
 )
 
-var (
-	re_whitespaces = regexp.MustCompile(`\s+`)
-)
+var re_whitespaces = regexp.MustCompile(`\s+`)
 
 type Command struct {
 	out 	bytes.Buffer
@@ -31,12 +29,16 @@ func (c *Command) Empty() bool {
 	return c.out.Len() == 0
 }
 
-func (c *Command) Output() string {
-	return strings.TrimRight(c.out.String(), "\n")
+func (c *Command) Output(trim bool) string {
+	out := strings.TrimRight(c.out.String(), "\n")
+	if trim {
+		out = re_whitespaces.ReplaceAllString(out, " ")
+	}
+	return out
 }
 
 func (c *Command) Output_lines() []string {
-	out := re_whitespaces.ReplaceAllString(c.Output(), " ")
+	out := c.Output(true)
 	lines := strings.Split(out, "\n")
 	for i := range lines {
 		lines[i] = strings.Trim(lines[i], " ")
