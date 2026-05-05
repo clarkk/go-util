@@ -8,7 +8,7 @@ import (
 	"os/exec"
 )
 
-var re_whitespaces = regexp.MustCompile(`\s+`)
+var re_horizontal_spaces = regexp.MustCompile(`[ \t]+`)
 
 type Command struct {
 	out 	bytes.Buffer
@@ -32,7 +32,7 @@ func (c *Command) Empty() bool {
 func (c *Command) Output(trim bool) string {
 	out := strings.TrimRight(c.out.String(), "\n")
 	if trim {
-		out = re_whitespaces.ReplaceAllString(out, " ")
+		out = re_horizontal_spaces.ReplaceAllString(out, " ")
 	}
 	return out
 }
