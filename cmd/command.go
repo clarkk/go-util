@@ -27,12 +27,16 @@ func (c *Command) Run(command string) error {
 	return nil
 }
 
-func (c *Command) Empty() bool{
+func (c *Command) Empty() bool {
 	return c.out.Len() == 0
 }
 
-func (c *Command) Output_lines() []string{
-	out := re_whitespaces.ReplaceAllString(strings.TrimRight(c.out.String(), "\n"), " ")
+func (c *Command) Output() string {
+	return strings.TrimRight(c.out.String(), "\n")
+}
+
+func (c *Command) Output_lines() []string {
+	out := re_whitespaces.ReplaceAllString(c.Output(), " ")
 	lines := strings.Split(out, "\n")
 	for i := range lines {
 		lines[i] = strings.Trim(lines[i], " ")
@@ -40,7 +44,7 @@ func (c *Command) Output_lines() []string{
 	return lines
 }
 
-func (c *Command) Output_fields() [][]string{
+func (c *Command) Output_fields() [][]string {
 	fields := [][]string{}
 	lines := c.Output_lines()
 	for i := range lines {
