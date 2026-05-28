@@ -1,4 +1,4 @@
-package securetoken
+package secure_token
 
 import (
 	"crypto/rand"
