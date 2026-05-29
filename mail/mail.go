@@ -17,13 +17,15 @@ const (
 )
 
 type Mail struct {
-	to_email	string
-	to_name		string
-	from_email	string
-	from_name	string
-	subject		string
-	body		string
-	html		string
+	to_email		string
+	to_name			string
+	from_email		string
+	from_name		string
+	reply_to_email	string
+	reply_to_name	string
+	subject			string
+	body			string
+	html			string
 }
 
 func NewMail() *Mail {
@@ -35,9 +37,14 @@ func (m *Mail) To(email, name string){
 	m.to_name		= name
 }
 
-func (m *Mail) From(email, name string) {
+func (m *Mail) From(email, name string){
 	m.from_email	= email
 	m.from_name		= name
+}
+
+func (m *Mail) Reply_to(email, name string){
+	m.reply_to_email	= email
+	m.reply_to_name		= name
 }
 
 func (m *Mail) Subject(subject string){
@@ -92,6 +99,16 @@ func (m *Mail) source() string {
 	b.WriteString("To: ")
 	b.WriteString(addr_to.String())
 	b.WriteString(CRLF)
+	
+	if m.reply_to_email != "" {
+		addr_reply := mail.Address{
+			Name:		m.reply_to_name,
+			Address:	m.reply_to_email,
+		}
+		b.WriteString("Reply-To: ")
+		b.WriteString(addr_reply.String())
+		b.WriteString(CRLF)
+	}
 	
 	b.WriteString("Message-ID: ")
 	b.WriteString(m.message_id())
