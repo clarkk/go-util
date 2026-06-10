@@ -56,7 +56,7 @@ func (m *Mail) Body(body string){
 }
 
 func (m *Mail) HTML(html string){
-	m.html = "<html><body>"+html+"</body></html>"
+	m.html = html
 }
 
 func (m *Mail) Message() (string, error){
