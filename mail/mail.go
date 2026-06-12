@@ -224,7 +224,7 @@ func (m *Mail) message_id(email string) (string, error){
 		return "", err
 	}
 	random := hex.EncodeToString(b)
-	return fmt.Sprintf("<%d.%s@%s>", timestamp, random, domain)
+	return fmt.Sprintf("<%d.%s@%s>", timestamp, random, domain), nil
 }
 
 func valid_email(email string) (string, error){
