@@ -121,7 +121,7 @@ func (m *Mail) Message() (string, error){
 		b.WriteString(CRLF)
 	}
 	
-	msg_id, err := m.message_id(from_email)
+	msg_id, err := message_id(from_email)
 	if err != nil {
 		return "", err
 	}
@@ -212,7 +212,7 @@ func (m *Mail) Message() (string, error){
 	return b.String(), nil
 }
 
-func (m *Mail) message_id(email string) (string, error){
+func message_id(email string) (string, error){
 	at := strings.LastIndex(email, "@")
 	domain := "localhost"
 	if at != -1 {
