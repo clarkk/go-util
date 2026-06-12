@@ -26,6 +26,7 @@ type Mail struct {
 	subject			string
 	body			string
 	html			string
+	unsubscribe_url	string
 }
 
 func NewMail() *Mail {
@@ -33,13 +34,13 @@ func NewMail() *Mail {
 }
 
 func (m *Mail) To(email, name string){
-	m.to_email		= email
-	m.to_name		= name
+	m.to_email			= email
+	m.to_name			= name
 }
 
 func (m *Mail) From(email, name string){
-	m.from_email	= email
-	m.from_name		= name
+	m.from_email		= email
+	m.from_name			= name
 }
 
 func (m *Mail) Reply_to(email, name string){
@@ -48,35 +49,40 @@ func (m *Mail) Reply_to(email, name string){
 }
 
 func (m *Mail) Subject(subject string){
-	m.subject = subject
+	m.subject			= subject
 }
 
 func (m *Mail) Body(body string){
-	m.body = body
+	m.body				= body
 }
 
 func (m *Mail) HTML(html string){
-	m.html = html
+	m.html				= html
+}
+
+func (m *Mail) Unsubscribe(url string){
+	m.unsubscribe_url	= url
 }
 
 func (m *Mail) Message() (string, error){
-	var err error
-	m.to_email, err = punycode(m.to_email)
+	from_email, err := valid_email(m.from_email)
 	if err != nil {
 		return "", err
 	}
-	return m.source(), nil
-}
-
-func (m *Mail) source() string {
+	
 	addr_from := mail.Address{
-		Name:		m.from_name,
-		Address:	m.from_email,
+		Name:		sanitize_header(m.from_name),
+		Address:	from_email,
+	}
+	
+	to_email, err := valid_email(m.to_email)
+	if err != nil {
+		return "", err
 	}
 	
 	addr_to := mail.Address{
-		Name:		m.to_name,
-		Address:	m.to_email,
+		Name:		sanitize_header(m.to_name),
+		Address:	to_email,
 	}
 	
 	boundary := fmt.Sprintf("boundary_%d", time.Now().UnixNano())
@@ -84,12 +90,12 @@ func (m *Mail) source() string {
 	var b strings.Builder
 	
 	b.WriteString("Return-Path: <")
-	b.WriteString(m.from_email)
+	b.WriteString(from_email)
 	b.WriteByte('>')
 	b.WriteString(CRLF)
 	
 	b.WriteString("Date: ")
-	b.WriteString(time.Now().Format(time.RFC1123Z))
+	b.WriteString(time.Now().UTC().Format(time.RFC1123Z))
 	b.WriteString(CRLF)
 	
 	b.WriteString("From: ")
@@ -101,29 +107,50 @@ func (m *Mail) source() string {
 	b.WriteString(CRLF)
 	
 	if m.reply_to_email != "" {
+		reply_to_email, err := valid_email(m.reply_to_email)
+		if err != nil {
+			return "", err
+		}
+		
 		addr_reply := mail.Address{
-			Name:		m.reply_to_name,
-			Address:	m.reply_to_email,
+			Name:		sanitize_header(m.reply_to_name),
+			Address:	reply_to_email,
 		}
 		b.WriteString("Reply-To: ")
 		b.WriteString(addr_reply.String())
 		b.WriteString(CRLF)
 	}
 	
+	msg_id, err := m.message_id(from_email)
+	if err != nil {
+		return "", err
+	}
+	
 	b.WriteString("Message-ID: ")
-	b.WriteString(m.message_id())
+	b.WriteString(msg_id)
 	b.WriteString(CRLF)
 	
+	if m.unsubscribe_url != "" {
+		b.WriteString("List-Unsubscribe: <")
+		b.WriteString(m.unsubscribe_url)
+		b.WriteString(">")
+		b.WriteString(CRLF)
+		
+		b.WriteString("List-Unsubscribe-Post: List-Unsubscribe=One-Click")
+		b.WriteString(CRLF)
+	}
+	
 	b.WriteString("Subject: ")
-	b.WriteString(mime.QEncoding.Encode(UTF8, m.subject))
+	b.WriteString(mime.BEncoding.Encode(UTF8, sanitize_header(m.subject)))
 	b.WriteString(CRLF)
 	
 	b.WriteString("MIME-Version: 1.0")
 	b.WriteString(CRLF)
 	
 	if m.html != "" && m.body != "" {
-		b.WriteString("Content-Type: multipart/alternative; boundary=")
+		b.WriteString(`Content-Type: multipart/alternative; boundary="`)
 		b.WriteString(boundary)
+		b.WriteString(`"`)
 		b.WriteString(CRLF)
 		b.WriteString(CRLF)
 		
@@ -182,30 +209,31 @@ func (m *Mail) source() string {
 		}
 		b.WriteString(CRLF)
 	}
-	return b.String()
+	return b.String(), nil
 }
 
-func (m *Mail) message_id() string {
-	at := strings.LastIndex(m.from_email, "@")
+func (m *Mail) message_id(email string) (string, error){
+	at := strings.LastIndex(email, "@")
 	domain := "localhost"
 	if at != -1 {
-		domain = m.from_email[at+1:]
+		domain = email[at+1:]
 	}
 	timestamp := time.Now().UnixNano()
 	b := make([]byte, 8)
-	rand.Read(b)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
 	random := hex.EncodeToString(b)
 	return fmt.Sprintf("<%d.%s@%s>", timestamp, random, domain)
 }
 
-func punycode(email string) (string, error){
-	parts := strings.Split(email, "@")
-	if len(parts) != 2 {
+func valid_email(email string) (string, error){
+	addr, err := mail.ParseAddress(email)
+	if err != nil {
 		return "", fmt.Errorf("Invalid email format")
 	}
 	
-	alias	:= parts[0]
-	domain	:= parts[1]
+	alias, domain, _ := strings.Cut(addr.Address, "@")
 	
 	puny_domain, err := idna.ToASCII(domain)
 	if err != nil {
@@ -213,4 +241,10 @@ func punycode(email string) (string, error){
 	}
 	
 	return alias+"@"+puny_domain, nil
+}
+
+func sanitize_header(v string) string {
+	v = strings.ReplaceAll(v, "\r", "")
+	v = strings.ReplaceAll(v, "\n", "")
+	return v
 }
