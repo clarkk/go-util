@@ -127,7 +127,7 @@ func (m *Mail) Message() (string, error){
 	}
 	
 	b.WriteString("Subject: ")
-	b.WriteString(mime.QEncoding.Encode(UTF8, sanitize_header(m.subject)))
+	b.WriteString(encode_subject(m.subject))
 	b.WriteString(CRLF)
 	
 	b.WriteString("MIME-Version: 1.0")
@@ -196,6 +196,16 @@ func (m *Mail) Message() (string, error){
 		b.WriteString(CRLF)
 	}
 	return b.String(), nil
+}
+
+func encode_subject(subject string) string {
+	subject = sanitize_header(subject)
+	for _, r := range subject {
+		if r > 127 {
+			return mime.QEncoding.Encode(UTF8, subject)
+		}
+	}
+	return subject
 }
 
 func message_id(email string) (string, error){
