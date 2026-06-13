@@ -70,19 +70,9 @@ func (m *Mail) Message() (string, error){
 		return "", err
 	}
 	
-	addr_from := mail.Address{
-		Name:		sanitize_header(m.from_name),
-		Address:	from_email,
-	}
-	
 	to_email, err := valid_email(m.to_email)
 	if err != nil {
 		return "", err
-	}
-	
-	addr_to := mail.Address{
-		Name:		sanitize_header(m.to_name),
-		Address:	to_email,
 	}
 	
 	boundary := fmt.Sprintf("boundary_%d", time.Now().UnixNano())
@@ -99,11 +89,11 @@ func (m *Mail) Message() (string, error){
 	b.WriteString(CRLF)
 	
 	b.WriteString("From: ")
-	b.WriteString(addr_from.String())
+	b.WriteString(format_address(m.from_name, from_email))
 	b.WriteString(CRLF)
 	
 	b.WriteString("To: ")
-	b.WriteString(addr_to.String())
+	b.WriteString(format_address(m.to_name, to_email))
 	b.WriteString(CRLF)
 	
 	if m.reply_to_email != "" {
@@ -112,12 +102,8 @@ func (m *Mail) Message() (string, error){
 			return "", err
 		}
 		
-		addr_reply := mail.Address{
-			Name:		sanitize_header(m.reply_to_name),
-			Address:	reply_to_email,
-		}
 		b.WriteString("Reply-To: ")
-		b.WriteString(addr_reply.String())
+		b.WriteString(format_address(m.reply_to_name, reply_to_email))
 		b.WriteString(CRLF)
 	}
 	
@@ -227,6 +213,18 @@ func message_id(email string) (string, error){
 	return fmt.Sprintf("<%d.%s@%s>", timestamp, random, domain), nil
 }
 
+func format_address(name, email string) string {
+	name = sanitize_header(name)
+	if name == "" {
+		return email
+	}
+	addr := mail.Address{
+		Name:		name,
+		Address:	email,
+	}
+	return addr.String()
+}
+
 func valid_email(email string) (string, error){
 	addr, err := mail.ParseAddress(email)
 	if err != nil {
@@ -243,8 +241,8 @@ func valid_email(email string) (string, error){
 	return alias+"@"+puny_domain, nil
 }
 
-func sanitize_header(v string) string {
-	v = strings.ReplaceAll(v, "\r", "")
-	v = strings.ReplaceAll(v, "\n", "")
-	return v
+func sanitize_header(s string) string {
+	s = strings.ReplaceAll(s, "\r", "")
+	s = strings.ReplaceAll(s, "\n", "")
+	return s
 }
