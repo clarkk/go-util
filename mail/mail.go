@@ -127,7 +127,7 @@ func (m *Mail) Message() (string, error){
 	}
 	
 	b.WriteString("Subject: ")
-	b.WriteString(mime.BEncoding.Encode(UTF8, sanitize_header(m.subject)))
+	b.WriteString(mime.QEncoding.Encode(UTF8, sanitize_header(m.subject)))
 	b.WriteString(CRLF)
 	
 	b.WriteString("MIME-Version: 1.0")
