@@ -5,6 +5,7 @@ import (
 	"time"
 	"mime"
 	"strings"
+	"net/url"
 	"net/mail"
 	"crypto/rand"
 	"encoding/hex"
@@ -60,7 +61,7 @@ func (m *Mail) HTML(html string){
 	m.html				= html
 }
 
-func (m *Mail) Unsubscribe(url string){
+func (m *Mail) Unsubscribe_URL(url string){
 	m.unsubscribe_url	= url
 }
 
@@ -75,9 +76,14 @@ func (m *Mail) Message() (string, error){
 		return "", err
 	}
 	
-	boundary := fmt.Sprintf("boundary_%d", time.Now().UnixNano())
+	r, err := random_hex(8)
+	if err != nil {
+		return "", err
+	}
+	boundary := fmt.Sprintf("boundary_%d.%s", time.Now().UnixNano(), r)
 	
 	var b strings.Builder
+	b.Grow(len(m.subject)+len(m.body)+len(m.html)+2048)
 	
 	b.WriteString("Return-Path: <")
 	b.WriteString(from_email)
@@ -118,7 +124,11 @@ func (m *Mail) Message() (string, error){
 	
 	if m.unsubscribe_url != "" {
 		b.WriteString("List-Unsubscribe: <")
-		b.WriteString(m.unsubscribe_url)
+		u, err := url.Parse(m.unsubscribe_url)
+		if err != nil || u.Scheme != "https" || u.Host == "" {
+			return "", fmt.Errorf("Invalid unsubscribe URL")
+		}
+		b.WriteString(u.String())
 		b.WriteString(">")
 		b.WriteString(CRLF)
 		
@@ -215,12 +225,11 @@ func message_id(email string) (string, error){
 		domain = email[at+1:]
 	}
 	timestamp := time.Now().UnixNano()
-	b := make([]byte, 8)
-	if _, err := rand.Read(b); err != nil {
+	r, err := random_hex(8)
+	if err != nil {
 		return "", err
 	}
-	random := hex.EncodeToString(b)
-	return fmt.Sprintf("<%d.%s@%s>", timestamp, random, domain), nil
+	return fmt.Sprintf("<%d.%s@%s>", timestamp, r, domain), nil
 }
 
 func format_address(name, email string) string {
@@ -249,6 +258,14 @@ func valid_email(email string) (string, error){
 	}
 	
 	return alias+"@"+puny_domain, nil
+}
+
+func random_hex(n_bytes int) (string, error){
+	b := make([]byte, n_bytes)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
 }
 
 func sanitize_header(s string) string {
