@@ -13,6 +13,7 @@ const ctx_env ctx_key = ""
 type (
 	Env_data interface {
 		Session() *sess.Session
+		User_auth() string
 		Lang() string
 		Data() Properties
 		Data_session() Properties
