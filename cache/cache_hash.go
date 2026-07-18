@@ -65,10 +65,6 @@ func NewCache_hash[K comparable, V any](
 
 //	Generate hash of value
 func Hash(v any) (*string, error){
-	if v == nil {
-		return nil, nil
-	}
-	
 	buf := buffer_pool.Get().(*bytes.Buffer)
 	buf.Reset()
 	defer buffer_pool.Put(buf)
