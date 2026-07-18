@@ -6,14 +6,15 @@ import (
 	"time"
 	"sync"
 	"bytes"
+	"context"
 	"encoding/gob"
 	"github.com/clarkk/go-util/hash"
 )
 
 var buffer_pool = sync.Pool{
-    New: func() any {
-        return bytes.NewBuffer(make([]byte, 0, 512))
-    },
+	New: func() any {
+		return bytes.NewBuffer(make([]byte, 0, 512))
+	},
 }
 
 type (
@@ -21,8 +22,8 @@ type (
 		lock		sync.RWMutex
 		items		map[K]cache_hash_item[V]
 		ttl			int
-		verify		func(key K, hash *string) (bool, error)
-		refresh		func(key K) (V, *string, error)
+		verify		func(ctx context.Context, key K, hash *string) (bool, error)
+		refresh		func(ctx context.Context, key K) (V, *string, error)
 	}
 	
 	cache_hash_item[V any] struct {
@@ -35,8 +36,8 @@ type (
 //	Create new hash cache
 func NewCache_hash[K comparable, V any](
 	ttl int,
-	verify func(key K, hash *string) (bool, error),
-	refresh func(key K) (V, *string, error),
+	verify func(ctx context.Context, key K, hash *string) (bool, error),
+	refresh func(ctx context.Context, key K) (V, *string, error),
 	purge_interval int,
 ) *Cache_hash[K, V] {
 	c := &Cache_hash[K, V]{
@@ -81,13 +82,13 @@ func Hash(v any) (*string, error){
 }
 
 //	Get cached value
-func (c *Cache_hash[K, V]) Get(key K) (V, error){
+func (c *Cache_hash[K, V]) Get(ctx context.Context, key K) (V, error){
 	c.lock.RLock()
 	item, found := c.items[key]
 	//	Cache hit
 	if found && time_unix() <= item.expires {
 		//	Verify hash
-		verified, err := c.verify(key, item.hash)
+		verified, err := c.verify(ctx, key, item.hash)
 		if err != nil {
 			c.lock.RUnlock()
 			var zero V
@@ -100,15 +101,15 @@ func (c *Cache_hash[K, V]) Get(key K) (V, error){
 	}
 	c.lock.RUnlock()
 	
-	return c.Refresh(key)
+	return c.Refresh(ctx, key)
 }
 
 //	Refresh value in cache
-func (c *Cache_hash[K, V]) Refresh(key K) (V, error){
+func (c *Cache_hash[K, V]) Refresh(ctx context.Context, key K) (V, error){
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	
-	value, hash, err := c.refresh(key)
+	value, hash, err := c.refresh(ctx, key)
 	if err != nil {
 		var zero V
 		return zero, err
