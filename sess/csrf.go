@@ -11,12 +11,19 @@ const CSRF_HEADER = "X-CSRF-Token"
 
 var (
 	csrf_token		string
-	csrf_origin		string
+	csrf_origin		*url.URL
 )
 
 func Init_CSRF(token, origin string){
+	parsed_origin, err := url.Parse(origin)
+	if err != nil ||
+		parsed_origin.Scheme == "" ||
+		parsed_origin.Host == "" {
+		panic("Invalid CSRF origin")
+	}
+	
 	csrf_token		= token
-	csrf_origin		= origin
+	csrf_origin		= parsed_origin
 }
 
 func Verify_CSRF(r *http.Request) bool {
@@ -35,15 +42,12 @@ func Verify_CSRF(r *http.Request) bool {
 		return false
 	}
 	
-	if verify_origin(r.Header.Get("Origin")) {
-		return true
+	origin := r.Header.Get("Origin")
+	if origin != "" {
+		return verify_origin(origin)
 	}
 	
-	if verify_origin(r.Header.Get("Referer")) {
-		return true
-	}
-	
-	return false
+	return verify_origin(r.Header.Get("Referer"))
 }
 
 func (s *Session) Generate_CSRF(){
@@ -69,5 +73,5 @@ func verify_origin(header_url string) bool {
 	if err != nil {
 		return false
 	}
-	return csrf_origin == parsed_url.Host
+	return parsed_url.Scheme == csrf_origin.Scheme && parsed_url.Host == csrf_origin.Host
 }
