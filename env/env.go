@@ -48,8 +48,7 @@ func New_request(r *http.Request, d Env_data) *Environment {
 	e.Set_lang(d.Lang())
 	
 	ctx := context.WithValue(r.Context(), ctx_env, e)
-	r2 := r.WithContext(ctx)
-	*r = *r2
+	*r = *r.WithContext(ctx)
 	
 	return e
 }

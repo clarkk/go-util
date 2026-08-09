@@ -113,8 +113,7 @@ func Start(w http.ResponseWriter, r *http.Request) (*Session, error){
 	s := wrap_session(sess)
 	
 	ctx = context.WithValue(ctx, ctx_sess, s)
-	r2 := r.WithContext(ctx)
-	*r = *r2
+	*r = *r.WithContext(ctx)
 	
 	s.w = w
 	s.r = r
