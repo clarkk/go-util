@@ -113,6 +113,10 @@ func (c *Client) request(req *http.Request, out any) (int, http.Header, error){
 		}
 		
 		if out_json {
+			if out != nil {
+				json.Unmarshal(b, out)
+			}
+			
 			var out_err any
 			if err := json.Unmarshal(b, &out_err); err == nil {
 				return status, header, &Error{
