@@ -4,6 +4,7 @@ import (
 	"io"
 	"fmt"
 	"time"
+	"mime"
 	"bytes"
 	"strings"
 	"context"
@@ -34,8 +35,8 @@ func Option_header(key, value string) Option {
 }
 
 func Option_basic_auth(auth string) Option {
-	return func(req *http.Request) {
-		user, pass, _ := strings.Cut(auth, ":")
+	user, pass, _ := strings.Cut(auth, ":")
+	return func(req *http.Request){
 		req.SetBasicAuth(user, pass)
 	}
 }
@@ -72,6 +73,7 @@ func (c *Client) Send(ctx context.Context, uri string, in, out any, opts ...Opti
 		return 0, nil, err
 	}
 	
+	req.Header.Set("Accept", TYPE_JSON)
 	if in != nil {
 		req.Header.Set(CONTENT_TYPE, TYPE_JSON)
 	}
@@ -94,21 +96,25 @@ func (c *Client) request(req *http.Request, out any) (int, http.Header, error){
 	}
 	defer res.Body.Close()
 	
-	header := res.Header
+	header		:= res.Header
+	status		:= res.StatusCode
 	
-	status			:= res.StatusCode
+	if status == http.StatusNoContent {
+		return status, header, nil
+	}
+	
 	content_type	:= header.Get(CONTENT_TYPE)
-	out_json		:= strings.HasPrefix(content_type, TYPE_JSON)
+	out_json		:= response_JSON(content_type)
 	
-	if status >= 400 {
+	if status < 200 || status >= 300 {
 		b, err := io.ReadAll(res.Body)
 		if err != nil {
-			return status, header, fmt.Errorf("HTTP %d: Unable to read response body: %v", status, err)
+			return status, header, fmt.Errorf("HTTP %d: Unable to read response body: %w", status, err)
 		}
 		
 		if out_json {
 			var out_err any
-			if err := json.UnmarshalRead(bytes.NewReader(b), &out_err); err == nil {
+			if err := json.Unmarshal(b, &out_err); err == nil {
 				return status, header, &Error{
 					req.URL.String(),
 					status,
@@ -145,7 +151,10 @@ func (c *Client) request(req *http.Request, out any) (int, http.Header, error){
 		return status, header, nil
 	}
 	
-	io.Copy(io.Discard, res.Body)
+	if _, err := io.Copy(io.Discard, res.Body); err != nil {
+		return status, header, fmt.Errorf("HTTP %d: Unable to read response body: %w", status, err)
+	}
+	
 	return status, header, nil
 }
 
@@ -158,4 +167,12 @@ func (c *Client) payload(in any) (string, io.Reader, error){
 		return "", nil, err
 	}
 	return http.MethodPost, &buf, nil
+}
+
+func response_JSON(content_type string) bool {
+	media_type, _, err := mime.ParseMediaType(content_type)
+	if err != nil {
+		return false
+	}
+	return media_type == TYPE_JSON || strings.HasSuffix(media_type, "+json")
 }
