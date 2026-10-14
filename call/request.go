@@ -40,6 +40,12 @@ func Option_basic_auth(auth string) Option {
 	}
 }
 
+func Option_bearer_auth(auth string) Option {
+	return func(req *http.Request) {
+		req.Header.Set("Authorization", "Bearer "+auth)
+	}
+}
+
 func Option_idempotency(key string) Option {
 	return Option_header(IDEMPOTENCY_KEY, key)
 }
