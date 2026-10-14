@@ -51,9 +51,12 @@ func (w *Writer) Sent_header() bool {
 	return w.sent_header
 }
 
-//	Flush implements the http.Flusher interface.
-//	This is critical for 2026 streaming APIs and Server-Sent Events (SSE).
+//	Flush implements http.Flusher for streaming responses and SSE.
 func (w *Writer) Flush() {
+	if !w.sent_header {
+		w.WriteHeader(http.StatusOK)
+	}
+	
 	if f, ok := w.ResponseWriter.(http.Flusher); ok {
 		f.Flush()
 	}
@@ -61,10 +64,19 @@ func (w *Writer) Flush() {
 
 //	Hijack implements the http.Hijacker interface for WebSockets.
 func (w *Writer) Hijack() (net.Conn, *bufio.ReadWriter, error) {
-	if h, ok := w.ResponseWriter.(http.Hijacker); ok {
-		return h.Hijack()
+	h, ok := w.ResponseWriter.(http.Hijacker)
+	if !ok {
+		return nil, nil, fmt.Errorf("Underlying ResponseWriter does not support hijacking")
 	}
-	return nil, nil, fmt.Errorf("Underlying ResponseWriter does not support hijacking")
+
+	conn, rw, err := h.Hijack()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	w.sent_header = true
+
+	return conn, rw, nil
 }
 
 //	Unwrap allows access to the original http.ResponseWriter (Go 1.20+ standard).
