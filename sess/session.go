@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"sync"
 	"time"
+	"uuid"
 	"context"
 	"net/http"
 	"encoding/json/v2"
-	"github.com/google/uuid"
 	"github.com/clarkk/go-util/rdb"
 	"github.com/clarkk/go-util/serv"
 )
