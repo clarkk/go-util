@@ -97,8 +97,8 @@ func (c *Client) Copy_file(local, remote string) error {
 	
 	command := fmt.Sprintf(
 		"umask 077 && cat > %s && chmod 0600 %s",
-		shell_quote(remote),
-		shell_quote(remote),
+		Shell_quote(remote),
+		Shell_quote(remote),
 	)
 	
 	output, err := session.CombinedOutput(command)
@@ -138,6 +138,10 @@ func (c *Client) Close() error {
 	return c.client.Close()
 }
 
+func Shell_quote(value string) string {
+	return "'"+strings.ReplaceAll(value, "'", "'\"'\"'")+"'"
+}
+
 func load_private_key(path, passphrase string) (ssh.Signer, error){
 	key, err := os.ReadFile(path)
 	if err != nil {
@@ -154,8 +158,4 @@ func load_private_key(path, passphrase string) (ssh.Signer, error){
 		return nil, fmt.Errorf("Unable to parse SSH private key %s: %w", path, err)
 	}
 	return signer, nil
-}
-
-func shell_quote(value string) string {
-	return "'"+strings.ReplaceAll(value, "'", "'\"'\"'")+"'"
 }
