@@ -143,16 +143,12 @@ func (c *Client) Run(command string) (string, error){
 		return "", fmt.Errorf("Unable to create SSH session: %w", err)
 	}
 	defer session.Close()
-
+	
 	output, err := session.CombinedOutput(command)
 	if err != nil {
-		return string(output), fmt.Errorf(
-			"Remote command failed: %w\n%s",
-			err,
-			output,
-		)
+		return string(output), fmt.Errorf("Remote command failed: %w\n%s", err, output)
 	}
-
+	
 	return string(output), nil
 }
 
