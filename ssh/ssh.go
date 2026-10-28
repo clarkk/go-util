@@ -53,10 +53,9 @@ func Connect(config Config) (*Client, error){
 	}
 	if config.Timeout == 0 {
 		config.Timeout = default_timeout
-		
-		if config.Timeout < 0 {
-			return nil, fmt.Errorf("SSH timeout must not be negative")
-		}
+	}
+	if config.Timeout < 0 {
+		return nil, fmt.Errorf("SSH timeout must not be negative")
 	}
 	
 	signer, err := load_private_key(config.Private_key, config.Passphrase)
