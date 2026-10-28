@@ -345,5 +345,5 @@ func time_unix() int64 {
 }
 
 func uuid_string() string {
-	return uuid.NewString()
+	return uuid.New().String()
 }
