@@ -53,6 +53,10 @@ func Connect(config Config) (*Client, error){
 	}
 	if config.Timeout == 0 {
 		config.Timeout = default_timeout
+		
+		if config.Timeout < 0 {
+			return nil, fmt.Errorf("SSH timeout must not be negative")
+		}
 	}
 	
 	signer, err := load_private_key(config.Private_key, config.Passphrase)
@@ -65,18 +69,37 @@ func Connect(config Config) (*Client, error){
 		return nil, fmt.Errorf("Unable to load SSH known hosts: %w", err)
 	}
 	
-	address := net.JoinHostPort(config.Host, strconv.Itoa(config.Port))
+	address		:= net.JoinHostPort(config.Host, strconv.Itoa(config.Port))
+	timeout		:= time.Duration(config.Timeout) * time.Second
+	deadline	:= time.Now().Add(timeout)
 	
-	client, err := ssh.Dial("tcp", address, &ssh.ClientConfig{
-		User:				config.User,
-		Auth:				[]ssh.AuthMethod{ssh.PublicKeys(signer)},
-		HostKeyCallback:	host_key_callback,
-		Timeout:			time.Duration(config.Timeout) * time.Second,
-	})
+	conn, err := net.DialTimeout("tcp", address, timeout)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to connect to %s: %w", address, err)
 	}
-
+	
+	if err := conn.SetDeadline(deadline); err != nil {
+		conn.Close()
+		return nil, fmt.Errorf("Unable to set SSH deadline: %w", err)
+	}
+	
+	connection, channels, requests, err := ssh.NewClientConn(conn, address, &ssh.ClientConfig{
+		User:				config.User,
+		Auth:				[]ssh.AuthMethod{ssh.PublicKeys(signer)},
+		HostKeyCallback:	host_key_callback,
+	})
+	if err != nil {
+		conn.Close()
+		return nil, fmt.Errorf("Unable to establish SSH connection to %s: %w", address, err)
+	}
+	
+	if err := conn.SetDeadline(time.Time{}); err != nil {
+		connection.Close()
+		return nil, fmt.Errorf("Unable to clear SSH deadline: %w", err)
+	}
+	
+	client := ssh.NewClient(connection, channels, requests)
+	
 	return &Client{client: client}, nil
 }
 
