@@ -115,7 +115,7 @@ func (c *Client) Copy_file(local, remote string) error {
 	return nil
 }
 
-/*func (c *Client) Run(command string) (string, error) {
+func (c *Client) Run(command string) (string, error){
 	session, err := c.client.NewSession()
 	if err != nil {
 		return "", fmt.Errorf("Unable to create SSH session: %w", err)
@@ -132,7 +132,7 @@ func (c *Client) Copy_file(local, remote string) error {
 	}
 
 	return string(output), nil
-}*/
+}
 
 func (c *Client) Close() error {
 	return c.client.Close()
