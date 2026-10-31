@@ -94,7 +94,10 @@ func (c *Client) request(req *http.Request, out any) (int, http.Header, error){
 	if err != nil {
 		return 0, nil, err
 	}
-	defer res.Body.Close()
+	defer func(){
+		io.Copy(io.Discard, res.Body)
+		res.Body.Close()
+	}()
 	
 	header		:= res.Header
 	status		:= res.StatusCode
