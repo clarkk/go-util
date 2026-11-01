@@ -9,7 +9,7 @@ import (
 func Load(path string, target any) error {
 	f, err := os.Open(path)
 	if err != nil {
-		return fmt.Errorf("Unable to read config %q: %w", path, err)
+		return fmt.Errorf("Unable to read YAML config %q: %w", path, err)
 	}
 	defer f.Close()
 	
@@ -17,7 +17,7 @@ func Load(path string, target any) error {
 	decoder.KnownFields(true)
 	
 	if err := decoder.Decode(target); err != nil {
-		return fmt.Errorf("Unable to parse config %q: %w", path, err)
+		return fmt.Errorf("Unable to parse YAML config %q: %w", path, err)
 	}
 	
 	return nil
