@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"strings"
 	"context"
+	"net/url"
 	"net/http"
 	"encoding/json/v2"
 )
@@ -15,6 +16,8 @@ import (
 const (
 	CONTENT_TYPE	= "Content-Type"
 	TYPE_JSON		= "application/json"
+	TYPE_FORM		= "application/x-www-form-urlencoded"
+	//TYPE_FORM_DATA	= "multipart/form-data"
 	IDEMPOTENCY_KEY = "Idempotency-Key"
 )
 
@@ -62,7 +65,7 @@ func NewClient(endpoint string, timeout int, opts ...Option) *Client {
 }
 
 func (c *Client) Send(ctx context.Context, uri string, in, out any, opts ...Option) (int, http.Header, error){
-	method, body, err := c.payload(in)
+	method, content_type, body, err := c.payload(in)
 	if err != nil {
 		return 0, nil, err
 	}
@@ -74,8 +77,8 @@ func (c *Client) Send(ctx context.Context, uri string, in, out any, opts ...Opti
 	}
 	
 	req.Header.Set("Accept", TYPE_JSON)
-	if in != nil {
-		req.Header.Set(CONTENT_TYPE, TYPE_JSON)
+	if content_type != "" {
+		req.Header.Set(CONTENT_TYPE, content_type)
 	}
 	
 	for _, opt := range c.options {
@@ -165,15 +168,20 @@ func (c *Client) request(req *http.Request, out any) (int, http.Header, error){
 	return status, header, nil
 }
 
-func (c *Client) payload(in any) (string, io.Reader, error){
+func (c *Client) payload(in any) (string, string, io.Reader, error){
 	if in == nil {
-		return http.MethodGet, nil, nil
+		return http.MethodGet, "", nil, nil
 	}
+	
+	if form, ok := in.(url.Values); ok {
+		return http.MethodPost, TYPE_FORM, strings.NewReader(form.Encode()), nil
+	}
+	
 	var buf bytes.Buffer
 	if err := json.MarshalWrite(&buf, in); err != nil {
-		return "", nil, err
+		return "", "", nil, err
 	}
-	return http.MethodPost, &buf, nil
+	return http.MethodPost, TYPE_JSON, &buf, nil
 }
 
 func response_JSON(content_type string) bool {
