@@ -10,6 +10,7 @@ import (
 	"context"
 	"net/url"
 	"net/http"
+	"net/http/httputil"
 	"encoding/json/v2"
 )
 
@@ -26,6 +27,7 @@ type (
 		endpoint	string
 		http_client	*http.Client
 		options		[]Option
+		verbose		bool
 	}
 	
 	Option func(*http.Request)
@@ -64,6 +66,10 @@ func NewClient(endpoint string, timeout int, opts ...Option) *Client {
 	}
 }
 
+func (c *Client) Verbose(){
+	c.verbose = true
+}
+
 func (c *Client) Send(ctx context.Context, uri string, in, out any, opts ...Option) (int, http.Header, error){
 	method, content_type, body, err := c.payload(in)
 	if err != nil {
@@ -93,6 +99,15 @@ func (c *Client) Send(ctx context.Context, uri string, in, out any, opts ...Opti
 }
 
 func (c *Client) request(req *http.Request, out any) (int, http.Header, error){
+	if c.verbose {
+		dump, err := httputil.DumpRequestOut(req, true)
+		if err != nil {
+			fmt.Printf("HTTP request error: %v", err)
+		} else {
+			fmt.Printf("HTTP request:\n%s", dump)
+		}
+	}
+	
 	res, err := c.http_client.Do(req)
 	if err != nil {
 		return 0, nil, err
