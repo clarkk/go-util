@@ -2,6 +2,7 @@ package call
 
 import (
 	"io"
+	"log"
 	"fmt"
 	"time"
 	"mime"
@@ -102,9 +103,9 @@ func (c *Client) request(req *http.Request, out any) (int, http.Header, error){
 	if c.verbose {
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err != nil {
-			fmt.Printf("HTTP request error: %v", err)
+			log.Printf("HTTP request error: %v", err)
 		} else {
-			fmt.Printf("HTTP request:\n%s", dump)
+			log.Printf("HTTP request:\n%s", dump)
 		}
 	}
 	
