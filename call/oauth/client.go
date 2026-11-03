@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sync"
 	"time"
-	"strings"
 	"context"
 	"net/url"
 	"github.com/clarkk/go-util/call"
@@ -31,13 +30,6 @@ type (
 		lock		sync.Mutex
 		token		Token
 		expires		time.Time
-	}
-	
-	Token struct {
-		Access_token	string	`json:"access_token"`
-		Token_type		string	`json:"token_type"`
-		Expires_in		int64	`json:"expires_in"`
-		Scope			string	`json:"scope"`
 	}
 	
 	Auth_method uint8
@@ -103,16 +95,8 @@ func (c *Client) client_credentials(ctx context.Context) (Token, error){
 		return Token{}, fmt.Errorf("Oauth: Fetch access token: %w", err)
 	}
 	
-	if out.Access_token == "" {
-		return Token{}, fmt.Errorf("Oauth: Empty access token")
-	}
-	
-	if !strings.EqualFold(out.Token_type, "Bearer") {
-		return Token{}, fmt.Errorf("Oauth: Unsupported token type: %q", out.Token_type)
-	}
-	
-	if out.Expires_in < 0 {
-		return Token{}, fmt.Errorf("Oauth: Negative token lifetime")
+	if err := out.Validate(); err != nil {
+		return Token{}, err
 	}
 	
 	return out, nil
