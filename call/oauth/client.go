@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	Auth_basic Auth_method = iota
-	Auth_body
+	AUTH_BASIC Auth_method = iota
+	AUTH_BODY
 )
 
 type (
@@ -84,12 +84,12 @@ func (c *Client) client_credentials(ctx context.Context) (Token, error){
 	var opts []call.Option
 	
 	switch c.config.Auth_method {
-	case Auth_basic:
+	case AUTH_BASIC:
 		opts = append(opts, call.Option_basic_auth(
 			url.QueryEscape(c.config.Client_id)+":"+url.QueryEscape(c.config.Client_secret),
 		))
 		
-	case Auth_body:
+	case AUTH_BODY:
 		in.Set("client_id", c.config.Client_id)
 		in.Set("client_secret", c.config.Client_secret)
 		
