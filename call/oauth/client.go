@@ -65,11 +65,11 @@ func (c *Client) Access_token(ctx context.Context) (string, error){
 		return "", err
 	}
 	
-	lifetime := time.Duration(token.Expires_in) * time.Second
+	lifetime := time.Duration(c.token.Expires_in) * time.Second
 	margin := min(30 * time.Second, lifetime / 10)
 	c.expires = start.Add(lifetime - margin)
 	
-	return token.Access_token, nil
+	return c.token.Access_token, nil
 }
 
 func (c *Client) client_credentials(ctx context.Context) (Token, error){
