@@ -60,12 +60,10 @@ func (c *Client) Access_token(ctx context.Context) (string, error){
 	
 	start := time.Now()
 	
-	token, err := c.client_credentials(ctx)
-	if err != nil {
+	var err error
+	if c.token, err = c.client_credentials(ctx); err != nil {
 		return "", err
 	}
-	
-	c.token = token
 	
 	lifetime := time.Duration(token.Expires_in) * time.Second
 	margin := min(30 * time.Second, lifetime / 10)
