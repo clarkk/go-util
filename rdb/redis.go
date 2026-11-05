@@ -52,6 +52,11 @@ func Set(ctx context.Context, key string, value []byte, expire int) error {
 	return client.Set(ctx, key, value, time_expire(expire)).Err()
 }
 
+//	Store a single value (if not exists). Will return false if it exists
+func SetNX(ctx context.Context, key string, value []byte, expire int) (bool, error){
+	return client.SetNX(ctx, key, value, time_expire(expire)).Result()
+}
+
 //	Fetch field in hash
 func Hget(ctx context.Context, key, field string) (value string, not_found bool, err error){
 	value, err = client.HGet(ctx, key, field).Result()
