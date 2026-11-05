@@ -73,7 +73,7 @@ func Hash(v any) (*string, error){
 	if err := enc.Encode(v); err != nil {
 		return nil, fmt.Errorf("Binary serialization: %w", err)
 	}
-	s := hash.SHA256_hex(buf.Bytes())
+	s := hash.SHA256(buf.Bytes()).Hex()
 	return &s, nil
 }
 
