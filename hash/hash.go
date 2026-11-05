@@ -8,19 +8,25 @@ import (
 
 func SHA256(b []byte) []byte {
 	sum := sha256.Sum256(b)
-	return sum[:]
+	out := make([]byte, hex.EncodedLen(len(sum)))
+	hex.Encode(out, sum[:])
+	return out
 }
 
 func SHA256_hex(b []byte) string {
-	return hex.EncodeToString(SHA256(b))
+	return string(SHA256(b))
 }
 
 func HMAC_SHA256(key, msg []byte) []byte {
 	mac := hmac.New(sha256.New, key)
 	mac.Write(msg)
-	return mac.Sum(nil)
+	sum := mac.Sum(nil)
+	
+	out := make([]byte, hex.EncodedLen(len(sum)))
+	hex.Encode(out, sum)
+	return out
 }
 
 func HMAC_SHA256_hex(key, msg []byte) string {
-	return hex.EncodeToString(HMAC_SHA256(key, msg))
+	return string(HMAC_SHA256(key, msg))
 }
