@@ -48,12 +48,12 @@ func Get(ctx context.Context, key string) (value string, not_found bool, err err
 }
 
 //	Store a single value associated with hash
-func Set(ctx context.Context, key string, value []byte, expire int) error {
+func Set(ctx context.Context, key, value string, expire int) error {
 	return client.Set(ctx, key, value, time_expire(expire)).Err()
 }
 
 //	Store a single value (if not exists). Will return false if it exists
-func SetNX(ctx context.Context, key string, value []byte, expire int) (bool, error){
+func SetNX(ctx context.Context, key, value string, expire int) (bool, error){
 	return client.SetNX(ctx, key, value, time_expire(expire)).Result()
 }
 
