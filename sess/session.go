@@ -300,7 +300,7 @@ func update_remote_session(ctx context.Context, s *session){
 	if err != nil {
 		panic("Session remote update JSON encode: "+err.Error())
 	}
-	if err := rdb.Set(ctx, sid_hash(s.sid), b, session_expires); err != nil {
+	if err := rdb.Set(ctx, sid_hash(s.sid), string(b), session_expires); err != nil {
 		panic("Session remote update: "+err.Error())
 	}
 }
