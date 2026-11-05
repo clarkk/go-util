@@ -7,7 +7,7 @@ import (
 )
 
 func SHA256_hex(b []byte) string {
-	return string(SHA256(b))
+	return string(SHA256_hex_bytes(b))
 }
 
 func SHA256_hex_bytes(b []byte) []byte {
@@ -18,7 +18,7 @@ func SHA256_hex_bytes(b []byte) []byte {
 }
 
 func HMAC_SHA256_hex(key, msg []byte) string {
-	return string(HMAC_SHA256(key, msg))
+	return string(HMAC_SHA256_hex_bytes(key, msg))
 }
 
 func HMAC_SHA256_hex_bytes(key, msg []byte) []byte {
