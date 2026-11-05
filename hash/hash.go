@@ -6,27 +6,31 @@ import (
 	"encoding/hex"
 )
 
-func SHA256_hex(b []byte) string {
-	return string(SHA256_hex_bytes(b))
+type Sum256 [sha256.Size]byte
+
+func SHA256(b []byte) Sum256 {
+	return Sum256(sha256.Sum256(b))
 }
 
-func SHA256_hex_bytes(b []byte) []byte {
-	sum := sha256.Sum256(b)
-	out := make([]byte, hex.EncodedLen(len(sum)))
-	hex.Encode(out, sum[:])
-	return out
-}
-
-func HMAC_SHA256_hex(key, msg []byte) string {
-	return string(HMAC_SHA256_hex_bytes(key, msg))
-}
-
-func HMAC_SHA256_hex_bytes(key, msg []byte) []byte {
+func HMAC_SHA256(key, msg []byte) Sum256 {
 	mac := hmac.New(sha256.New, key)
 	mac.Write(msg)
-	sum := mac.Sum(nil)
 	
-	out := make([]byte, hex.EncodedLen(len(sum)))
-	hex.Encode(out, sum)
+	var sum Sum256
+	mac.Sum(sum[:0])
+	return sum
+}
+
+func (s Sum256) Bytes() []byte {
+	return s[:]
+}
+
+func (s Sum256) Hex() string {
+	return hex.EncodeToString(s[:])
+}
+
+func (s Sum256) Hex_bytes() []byte {
+	out := make([]byte, hex.EncodedLen(len(s)))
+	hex.Encode(out, s[:])
 	return out
 }
